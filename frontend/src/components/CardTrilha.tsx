@@ -5,7 +5,6 @@ interface CardTrilhaProps{
     timestamp: string
     politica: string
     gMusicID: string
-    usada: string
 }
 
 export default function CardTrilha(props:CardTrilhaProps){
@@ -17,7 +16,6 @@ export default function CardTrilha(props:CardTrilhaProps){
             <div><strong>Timestamp:</strong> {props.timestamp}</div>
             <div><strong>Política:</strong> {props.politica}</div>
             <div><strong>G music ID:</strong> {props.gMusicID}</div>
-            <div><strong>Usada:</strong> {props.usada}</div>
         </div>
     )
 }

@@ -12,7 +12,7 @@ export default function TrilhaIdentificada() {
       timeStamp: "00:23 - 1:00",
       politica: "(Não encontrada/Restrita/Livre)",
       gMusicID: "XXXXXXXXXX",
-      usada: "2",
+      
     },
     {
       nome: "Oceano",
@@ -21,7 +21,7 @@ export default function TrilhaIdentificada() {
       timeStamp: "00:23 - 1:00",
       politica: "(Não encontrada/Restrita/Livre)",
       gMusicID: "XXXXXXXXXY",
-      usada: "2",
+      
     },
     {
       nome: "Oceano",
@@ -30,7 +30,7 @@ export default function TrilhaIdentificada() {
       timeStamp: "00:23 - 1:00",
       politica: "(Não encontrada/Restrita/Livre)",
       gMusicID: "XXXXXXXXXZ",
-      usada: "2",
+      
     },
   ];
 
@@ -86,7 +86,6 @@ export default function TrilhaIdentificada() {
               timestamp={trilha.timeStamp}
               politica={trilha.politica}
               gMusicID={trilha.gMusicID}
-              usada={`${trilha.usada} Vezes`}
             />
           ))}
         </div>
