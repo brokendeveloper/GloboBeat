@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(ls -la \"c:\\Users\\Douglas\\Documents\\school\\GloboBeatV2\\backend\\infra\"\" | grep -E \".env$ \")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
