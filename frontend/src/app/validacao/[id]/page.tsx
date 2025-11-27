@@ -1,18 +1,10 @@
 "use client";
 
+import TrackCard, { type Track } from "@/components/CardTrilha";
 import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { use, useState } from "react";
-
-interface Track {
-  nome: string;
-  album: string;
-  banda: string;
-  timestamp: string;
-  politica: string;
-  gMusicID: string;
-}
 
 interface ValidacaoDetalhes {
   id: string;
@@ -41,33 +33,6 @@ const mockValidacoes: Record<string, ValidacaoDetalhes> = {
     ],
   },
 };
-
-function TrackCard(props: Track) {
-  return (
-    <Box bg="#055371" p={5} rounded="md" color="white" w="full">
-      <VStack align="stretch" gap={2}>
-        <Text>
-          <strong>Nome:</strong> {props.nome}
-        </Text>
-        <Text>
-          <strong>Álbum:</strong> {props.album}
-        </Text>
-        <Text>
-          <strong>Banda:</strong> {props.banda}
-        </Text>
-        <Text>
-          <strong>Timestamp:</strong> {props.timestamp}
-        </Text>
-        <Text>
-          <strong>Política:</strong> {props.politica}
-        </Text>
-        <Text>
-          <strong>G music ID:</strong> {props.gMusicID}
-        </Text>
-      </VStack>
-    </Box>
-  );
-}
 
 export default function ValidacaoDetalhesPage({
   params,
@@ -171,7 +136,7 @@ export default function ValidacaoDetalhesPage({
 
         <VStack gap={4} maxW="700px" mx="auto">
           {validacao.tracks.map((track, index) => (
-            <TrackCard key={index} {...track} />
+            <TrackCard key={`${track.gMusicID}-${index}`} {...track} />
           ))}
         </VStack>
       </Box>

@@ -1,21 +1,37 @@
-interface CardTrilhaProps{
-    nome: string
-    album: string
-    banda: string
-    timestamp: string
-    politica: string
-    gMusicID: string
+import { Box, Text, VStack } from "@chakra-ui/react";
+
+export interface Track {
+  nome: string;
+  album: string;
+  banda: string;
+  timestamp: string;
+  politica: string;
+  gMusicID: string;
 }
 
-export default function CardTrilha(props:CardTrilhaProps){
-    return(
-        <div className="bg-[#055371] !mb-0.5 w-1/4 h-80 !p-5 text-white !text-2xl rounded-md">
-            <div><strong>Nome:</strong> {props.nome}</div>
-            <div><strong>Albúm:</strong> {props.album}</div>
-            <div><strong>Banda:</strong> {props.banda}</div>
-            <div><strong>Timestamp:</strong> {props.timestamp}</div>
-            <div><strong>Política:</strong> {props.politica}</div>
-            <div><strong>G music ID:</strong> {props.gMusicID}</div>
-        </div>
-    )
+export default function TrackCard(props: Track) {
+  return (
+    <Box bg="#055371" p={5} rounded="md" color="white" w="full">
+      <VStack align="stretch" gap={2}>
+        <Text>
+          <strong>Nome:</strong> {props.nome}
+        </Text>
+        <Text>
+          <strong>Álbum:</strong> {props.album}
+        </Text>
+        <Text>
+          <strong>Banda:</strong> {props.banda}
+        </Text>
+        <Text>
+          <strong>Timestamp:</strong> {props.timestamp}
+        </Text>
+        <Text>
+          <strong>Política:</strong> {props.politica}
+        </Text>
+        <Text>
+          <strong>G music ID:</strong> {props.gMusicID}
+        </Text>
+      </VStack>
+    </Box>
+  );
 }
