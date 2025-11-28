@@ -2,7 +2,7 @@
 
 import TrackCard, { type Track } from "@/components/CardTrilha";
 import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
-import { ArrowLeft, CheckCircle2, FileDown } from "lucide-react";
+import { ArrowLeft, FileDown } from "lucide-react";
 import Link from "next/link";
 import { type ChangeEvent, use, useState } from "react";
 
@@ -70,29 +70,32 @@ export default function TrilhaIdentificadaDetalhes({
   const [status, setStatus] = useState<TrilhaStatus>(trilha.status);
   const [acaoSelecionada, setAcaoSelecionada] = useState<
     "" | "confirmar" | "negar"
-  >("");
-
-  const handleAplicarAcao = () => {
-    if (acaoSelecionada === "confirmar") {
-      setStatus("Identificada");
-    }
-    if (acaoSelecionada === "negar") {
-      setStatus("Revisão Necessária");
-    }
-  };
+  >(() => {
+    if (trilha.status === "Identificada") return "confirmar";
+    if (trilha.status === "Revisão Necessária") return "negar";
+    return "";
+  });
 
   const handleSelectAcao = (event: ChangeEvent<HTMLSelectElement>) => {
-    setAcaoSelecionada(event.target.value as "" | "confirmar" | "negar");
+    const value = event.target.value as "" | "confirmar" | "negar";
+    setAcaoSelecionada(value);
+
+    if (value === "confirmar") {
+      setStatus("Identificada");
+      return;
+    }
+
+    if (value === "negar") {
+      setStatus("Revisão Necessária");
+      return;
+    }
+
+    setStatus(trilha.status);
   };
 
   const handleGerarPDF = () => {
     console.log(`Gerando PDF da trilha ${trilha.id}`);
   };
-
-  const isAplicarDisabled =
-    !acaoSelecionada ||
-    (acaoSelecionada === "confirmar" && status === "Identificada") ||
-    (acaoSelecionada === "negar" && status === "Revisão Necessária");
 
   return (
     <Box as="main" flex={1} bg="white" p={8} px={32}>
@@ -158,42 +161,6 @@ export default function TrilhaIdentificadaDetalhes({
               </select>
             </Box>
 
-            <Flex gap={3}>
-              <Button
-                onClick={handleAplicarAcao}
-                borderRadius="lg"
-                bg="#055371"
-                color="white"
-                px={6}
-                py={5}
-                fontSize="md"
-                fontWeight="bold"
-                _hover={{ bg: "#066d95" }}
-                disabled={isAplicarDisabled}
-              >
-                <Flex align="center" gap={2}>
-                  <CheckCircle2 size={18} />
-                  Aplicar ação
-                </Flex>
-              </Button>
-              <Button
-                onClick={handleGerarPDF}
-                borderRadius="lg"
-                variant="outline"
-                borderColor="#055371"
-                color="#055371"
-                px={6}
-                py={5}
-                fontSize="md"
-                fontWeight="bold"
-                _hover={{ bg: "rgba(5, 83, 113, 0.08)" }}
-              >
-                <Flex align="center" gap={2}>
-                  <FileDown size={18} />
-                  Gerar PDF
-                </Flex>
-              </Button>
-            </Flex>
           </Flex>
         </Flex>
       </Flex>
@@ -203,6 +170,26 @@ export default function TrilhaIdentificadaDetalhes({
           <TrackCard key={`${track.gMusicID}-${index}`} {...track} />
         ))}
       </VStack>
+
+      <Flex justify="center" mt={8}>
+        <Button
+          onClick={handleGerarPDF}
+          borderRadius="lg"
+          variant="outline"
+          borderColor="#055371"
+          color="#055371"
+          px={8}
+          py={6}
+          fontSize="md"
+          fontWeight="bold"
+          _hover={{ bg: "rgba(5, 83, 113, 0.08)" }}
+        >
+          <Flex align="center" gap={2}>
+            <FileDown size={18} />
+            Gerar PDF
+          </Flex>
+        </Button>
+      </Flex>
     </Box>
   );
 }

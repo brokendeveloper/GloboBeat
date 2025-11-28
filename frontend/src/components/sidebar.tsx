@@ -12,6 +12,7 @@ interface SidebarProps {
 
 export function Sidebar({ children }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const closeMenu = () => setIsOpen(false)
 
   const menuItems = [
     { label: "Histórico", href: "/historico" },
@@ -21,6 +22,19 @@ export function Sidebar({ children }: SidebarProps) {
 
   return (
     <Box position="relative" minH="100vh">
+      {isOpen && (
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          w="100vw"
+          h="100vh"
+          bg="blackAlpha.400"
+          backdropFilter="blur(6px)"
+          zIndex={900}
+          onClick={closeMenu}
+        />
+      )}
       {/* Sidebar */}
       <Box
         position="fixed"
@@ -63,6 +77,7 @@ export function Sidebar({ children }: SidebarProps) {
                 _hover={{ bg: "whiteAlpha.200" }}
                 overflow="hidden"
                 whiteSpace="nowrap"
+                onClick={closeMenu}
               >
                 <Text opacity={isOpen ? 1 : 0} transition="opacity 0.2s">
                   {item.label}
