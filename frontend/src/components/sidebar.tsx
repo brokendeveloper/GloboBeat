@@ -1,27 +1,23 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import Link from "next/link"
-import { Box, Flex, Text, IconButton } from "@chakra-ui/react"
-import { Menu, X } from "lucide-react"
+import Link from "next/link";
+import { Box, Flex, IconButton, Text } from "@chakra-ui/react";
+import { X } from "lucide-react";
 
 interface SidebarProps {
-  children: React.ReactNode
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function Sidebar({ children }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const closeMenu = () => setIsOpen(false)
+const menuItems = [
+  { label: "Histórico", href: "/historico" },
+  { label: "Validação", href: "/validacao" },
+  { label: "Dashboard", href: "/dashboard" },
+];
 
-  const menuItems = [
-    { label: "Histórico", href: "/historico" },
-    { label: "Validação", href: "/validacao" },
-    { label: "Dashboard", href: "/dashboard" },
-  ]
-
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
-    <Box position="relative" minH="100vh">
+    <>
       {isOpen && (
         <Box
           position="fixed"
@@ -32,38 +28,40 @@ export function Sidebar({ children }: SidebarProps) {
           bg="blackAlpha.400"
           backdropFilter="blur(6px)"
           zIndex={900}
-          onClick={closeMenu}
+          onClick={onClose}
         />
       )}
-      {/* Sidebar */}
+
       <Box
         position="fixed"
-        left={0}
         top={0}
+        left={0}
         h="100vh"
-        w={isOpen ? "250px" : "60px"}
+        w="260px"
         bg="#055371"
-        transition="width 0.3s ease"
-        zIndex={1000}
         borderRight="2px solid"
         borderColor="whiteAlpha.300"
+        transform={isOpen ? "translateX(0)" : "translateX(-100%)"}
+        transition="transform 0.3s ease"
+        zIndex={1000}
+        display="flex"
+        flexDirection="column"
+        p={4}
       >
-        {/* Toggle Button */}
-        <Flex justify={isOpen ? "flex-end" : "center"} p={4}>
+        <Flex justify="flex-end">
           <IconButton
-            aria-label="Toggle menu"
-            onClick={() => setIsOpen(!isOpen)}
-            bg="transparent"
+            aria-label="Fechar menu"
+            onClick={onClose}
+            variant="ghost"
             color="white"
             _hover={{ bg: "whiteAlpha.200" }}
             size="sm"
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            <X size={20} />
           </IconButton>
         </Flex>
 
-        {/* Menu Items */}
-        <Flex direction="column" gap={2} px={3} mt={8}>
+        <Flex direction="column" gap={3} mt={8}>
           {menuItems.map((item) => (
             <Link key={item.href} href={item.href}>
               <Box
@@ -75,28 +73,14 @@ export function Sidebar({ children }: SidebarProps) {
                 cursor="pointer"
                 transition="all 0.2s"
                 _hover={{ bg: "whiteAlpha.200" }}
-                overflow="hidden"
-                whiteSpace="nowrap"
-                onClick={closeMenu}
+                onClick={onClose}
               >
-                <Text opacity={isOpen ? 1 : 0} transition="opacity 0.2s">
-                  {item.label}
-                </Text>
+                <Text>{item.label}</Text>
               </Box>
             </Link>
           ))}
         </Flex>
       </Box>
-
-      {/* Main Content */}
-      <Box
-        // Remove margin and width adjustments
-        ml="0"
-        w="100%"
-        transition="all 0.3s ease"
-      >
-        {children}
-      </Box>
-    </Box>
-  )
+    </>
+  );
 }

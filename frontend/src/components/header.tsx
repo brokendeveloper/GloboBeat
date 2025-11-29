@@ -1,8 +1,8 @@
 "use client";
 
-import { Box, Button, Flex, Input, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, IconButton, Input, Text, VStack } from "@chakra-ui/react";
 import Image from "next/image";
-import { Search, User } from "lucide-react";
+import { Menu, Search, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -26,7 +26,11 @@ const mockSearchData: SearchResult[] = [
   { id: "7", type: "validacao", title: "20/09/2025 - Reportagem8", link: "/validacao/2" },
 ];
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -102,8 +106,20 @@ export function Header() {
       py={4}
     >
       <Flex align="center" justify="space-between">
-        {/* Espaço à esquerda (pode ser usado futuramente para título ou breadcrumb) */}
-        <Box flex={1} />
+        <Flex flex={1} align="center">
+          {onMenuClick && (
+            <IconButton
+              aria-label="Abrir menu"
+              onClick={onMenuClick}
+              variant="ghost"
+              color="white"
+              _hover={{ bg: "whiteAlpha.200" }}
+              size="sm"
+            >
+              <Menu size={20} />
+            </IconButton>
+          )}
+        </Flex>
 
         {/* Logo centralizado */}
         <Flex flex={1} justify="center">
