@@ -1,2 +1,0 @@
-pika
-psycopg2-binary
