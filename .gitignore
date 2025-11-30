@@ -1,1 +1,17 @@
-/backend/infra/.env
+
+# Ignorar pastas de mídia pesada
+trilhas_globo/
+1_entrada_midia/
+
+# Ignorar backup antigo
+backend/workers/globoBeat-pythonServices/
+
+# Ignorar arquivos temporários e de ambiente
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+
+# Opcional: Se o arquivo de banco ficar muito grande (>50MB), ignore ele também
+# backend/workers/python_service/globo_db.pklz

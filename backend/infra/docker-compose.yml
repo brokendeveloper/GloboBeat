@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # --- BANCO PRINCIPAL (Dados do App: Jobs, Users) ---
   db:
     image: postgres:16
     container_name: trilhas_db
@@ -10,9 +11,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - globobeat_net
+
+  # (Removido db_fingerprints pois mudamos para Audfprint Local)
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -26,6 +31,8 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - globobeat_net
 
   api:
     build: ../api
@@ -38,27 +45,51 @@ services:
     depends_on:
       - db
       - rabbitmq
+    networks:
+      - globobeat_net
 
-  worker-pre:
-    build: ../workers/worker-pre
-    container_name: worker_pre
+  worker-audio:
+    build: ../workers
+    container_name: worker_audio
     restart: always
     env_file:
       - .env
-    depends_on:
-      - db
-      - rabbitmq
+    environment:
+      DB_HOST: db
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
 
-  worker-rec:
-    build: ../workers/worker-rec
-    container_name: worker_rec
-    restart: always
-    env_file:
-      - .env
+
+      ACRCLOUD_HOST: ${ACRCLOUD_HOST}
+      ACRCLOUD_ACCESS_KEY: ${ACRCLOUD_ACCESS_KEY}
+      ACRCLOUD_ACCESS_SECRET: ${ACRCLOUD_ACCESS_SECRET}
+      ACOUSTID_API_KEY: ${ACOUSTID_API_KEY}
+
+
+      RABBITMQ_HOST: rabbitmq
+
+      TRILHAS_DIR: /app/trilhas_globo
+    volumes:
+      # 1. Mapeia as músicas (Leitura)
+      - ../../trilhas_globo:/app/trilhas_globo
+
+      # 2. Mapeia a pasta de teste (Leitura)
+      - ../workers/python_service/1_entrada_midia:/app/entrada_midia
+
+      # 3. NOVO: Mapeia o código E o banco de dados (Leitura/Escrita)
+      # Isso faz o 'globo_db.pklz' ser salvo no seu computador!
+      - ../workers/python_service:/app/python_service
     depends_on:
       - db
       - rabbitmq
+    networks:
+      - globobeat_net
 
 volumes:
   postgres_data:
   rabbitmq_data:
+
+networks:
+  globobeat_net:
+    driver: bridge
