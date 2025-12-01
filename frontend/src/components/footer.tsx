@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Box, Flex, IconButton, Stack, Text } from "@chakra-ui/react";
 import { Linkedin, Instagram, Youtube } from "lucide-react";
+import { useSyncExternalStore } from "react";
 import { themeTokens } from "@/constants/theme";
 import { useThemeMode } from "@/components/theme-provider";
 
@@ -15,7 +16,13 @@ const socialLinks = [
 
 export function Footer() {
   const { theme } = useThemeMode();
-  const isDark = theme === "dark";
+  const hasHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const themeForDisplay = hasHydrated ? theme : "light";
+  const isDark = themeForDisplay === "dark";
 
   return (
     <Box
@@ -80,8 +87,7 @@ export function Footer() {
           gap={3}
         >
           <Text fontSize="xs" color={themeTokens.footerSubtle}>
-            © {new Date().getFullYear()} GloboBeat. Todos os direitos
-            reservados.
+            © 2025 GloboBeat. Todos os direitos reservados.
           </Text>
           <Flex gap={6} fontSize="xs" color={themeTokens.footerSubtle}>
             <Link href="/termos">Termos de uso</Link>

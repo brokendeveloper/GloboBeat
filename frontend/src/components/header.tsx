@@ -4,7 +4,7 @@ import { Box, Button, Flex, IconButton, Input, Text, VStack } from "@chakra-ui/r
 import Image from "next/image";
 import { Menu, Moon, Search, Sun, User } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useThemeMode } from "@/components/theme-provider";
 import { themeTokens } from "@/constants/theme";
@@ -39,6 +39,11 @@ export function Header({ onMenuClick }: HeaderProps) {
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const { theme, toggleTheme } = useThemeMode();
+  const hasMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -103,6 +108,10 @@ export function Header({ onMenuClick }: HeaderProps) {
   const resultsHover = themeTokens.surfaceMuted;
   const resultsDivider = themeTokens.borderSubtle;
   const resultsSubtitle = themeTokens.textMuted;
+
+  const themeForDisplay = hasMounted ? theme : "light";
+  const themeToggleLabel =
+    themeForDisplay === "light" ? "Ativar modo escuro" : "Ativar modo claro";
 
   return (
     <Box
@@ -270,14 +279,14 @@ export function Header({ onMenuClick }: HeaderProps) {
           </Box>
 
           <IconButton
-            aria-label={theme === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
+            aria-label={themeToggleLabel}
             onClick={toggleTheme}
             variant="ghost"
             color={accentColor}
             _hover={{ bg: "whiteAlpha.200" }}
             size="sm"
           >
-            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+            {themeForDisplay === "light" ? <Moon size={18} /> : <Sun size={18} />}
           </IconButton>
           <Button
             variant="ghost"

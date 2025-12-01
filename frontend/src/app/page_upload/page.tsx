@@ -2,14 +2,27 @@
 
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { Box, Flex, IconButton, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, IconButton, Text, VStack } from "@chakra-ui/react";
 import { UploadCloud, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { themeTokens } from "@/constants/theme";
+import { useUploadTrilha } from "@/features/trilhas/hooks";
+import { StatusMessage } from "@/components/status-message";
 
 export default function DashboardPage() {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
+  const { uploadState, uploadTrilha, resetUploadState, setUploadError } = useUploadTrilha({
+    onSuccess: (response) => {
+      setTimeout(() => {
+        router.push(
+          `/trilha-identificada/${response.trilhaId}?requestId=${response.requestId}`
+        );
+      }, 400);
+    },
+  });
 
   const selectedVideo = selectedFiles?.[0] ?? null;
 
@@ -30,6 +43,7 @@ export default function DashboardPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     setSelectedFiles(files);
+    resetUploadState();
 
     if (!files || files.length === 0) {
       clearPreview();
@@ -43,6 +57,8 @@ export default function DashboardPage() {
       clearPreview();
       e.target.value = "";
       setSelectedFiles(null);
+      resetUploadState();
+      setUploadError("Apenas arquivos de vídeo (MP4, MOV, MKV) são aceitos.");
       return;
     }
 
@@ -54,9 +70,14 @@ export default function DashboardPage() {
   const handleRemoveFile = () => {
     clearPreview();
     setSelectedFiles(null);
+    resetUploadState();
     if (inputRef.current) {
       inputRef.current.value = "";
     }
+  };
+
+  const handleUploadVideo = async () => {
+    await uploadTrilha(selectedVideo);
   };
 
   useEffect(() => {
@@ -203,6 +224,37 @@ export default function DashboardPage() {
                 )}
               </Box>
             )}
+
+            <Button
+              onClick={handleUploadVideo}
+              isDisabled={!selectedVideo || uploadState.status === "uploading"}
+              isLoading={uploadState.status === "uploading"}
+              loadingText="Enviando vídeo"
+              bg={themeTokens.brandPrimary}
+              color={themeTokens.brandOnPrimary}
+              borderRadius="lg"
+              py={6}
+              fontSize="lg"
+            >
+              {uploadState.requestId && uploadState.status === "success"
+                ? "Processando trilhas..."
+                : "Enviar vídeo para análise"}
+            </Button>
+
+            <StatusMessage
+              status={
+                uploadState.status === "error"
+                  ? "error"
+                  : uploadState.status === "success"
+                  ? "success"
+                  : "idle"
+              }
+              message={
+                uploadState.status === "success" && uploadState.requestId
+                  ? "Upload concluído! Estamos redirecionando para as trilhas identificadas."
+                  : uploadState.errorMessage
+              }
+            />
           </VStack>
         </Box>
       </Flex>

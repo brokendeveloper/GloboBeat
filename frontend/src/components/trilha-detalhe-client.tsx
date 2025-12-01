@@ -3,45 +3,96 @@
 import TrackCard from "@/components/CardTrilha";
 import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
 import { FileDown } from "lucide-react";
-import { type ChangeEvent, useState } from "react";
-import { statusColor, type TrilhaStatus } from "@/features/trilhas/types";
-import { trilhaDetalhesMap } from "@/features/trilhas/data";
+import { useMemo } from "react";
+import { statusColor, type TrilhaDetalhes } from "@/features/trilhas/types";
 import { BackLink } from "@/components/back-link";
 import { themeTokens } from "@/constants/theme";
 import { ReportagemVideoPanel } from "@/components/reportagem-video-panel";
 import { getReportagemVideo } from "@/constants/media";
+import { useTrilhaStatus } from "@/features/trilhas/hooks";
+import { StatusMessage } from "@/components/status-message";
 
 interface TrilhaDetalheClientProps {
   id: string;
+  initialTrilha: TrilhaDetalhes | null;
+  requestId?: string | null;
+  errorMessage?: string | null;
 }
 
-export function TrilhaDetalheClient({ id }: TrilhaDetalheClientProps) {
-  const trilha = trilhaDetalhesMap[id] || trilhaDetalhesMap["1"];
-  const video = getReportagemVideo(trilha.id);
+type Acao = "" | "confirmar" | "negar";
 
-  const [status, setStatus] = useState<TrilhaStatus>(trilha.status);
-  const [acaoSelecionada, setAcaoSelecionada] = useState<"" | "confirmar" | "negar">(() => {
-    if (trilha.status === "Identificada") return "confirmar";
-    if (trilha.status === "Revisão Necessária") return "negar";
-    return "";
-  });
+export function TrilhaDetalheClient({
+  id,
+  initialTrilha,
+  requestId = null,
+  errorMessage = null,
+}: TrilhaDetalheClientProps) {
+  const trilha = initialTrilha;
+  const video = useMemo(() => {
+    if (!trilha) return null;
+    return getReportagemVideo(trilha.id);
+  }, [trilha]);
 
-  const handleSelectAcao = (event: ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value as "" | "confirmar" | "negar";
-    setAcaoSelecionada(value);
+  if (!trilha || !video) {
+    return (
+      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={8} px={32}>
+        <Flex align="center" justify="center" mb={8} position="relative">
+          <Box position="absolute" left={0}>
+            <BackLink href="/trilha-identificada" />
+          </Box>
+          <Heading as="h1" size="lg" color={themeTokens.textPrimary}>
+            Detalhes da trilha
+          </Heading>
+        </Flex>
 
-    if (value === "confirmar") {
-      setStatus("Identificada");
-      return;
-    }
+        <Box
+          maxW="640px"
+          mx="auto"
+          bg={themeTokens.surfaceCard}
+          borderRadius="2xl"
+          border={`1px solid ${themeTokens.borderSubtle}`}
+          p={8}
+          textAlign="center"
+        >
+          <Text fontWeight="semibold" color={themeTokens.statusError} mb={3}>
+            Não foi possível carregar os detalhes desta trilha.
+          </Text>
+          <Text color={themeTokens.textMuted}>
+            {errorMessage ??
+              "Revise o envio ou tente novamente a partir da página de trilhas identificadas."}
+          </Text>
+        </Box>
+        {requestId && (
+          <Text color={themeTokens.textMuted} fontSize="sm" mt={4} textAlign="center">
+            Solicitação {requestId}
+          </Text>
+        )}
+      </Box>
+    );
+  }
 
-    if (value === "negar") {
-      setStatus("Revisão Necessária");
-      return;
-    }
+  return (
+    <TrilhaDetalheView id={id} trilha={trilha} video={video} requestId={requestId} />
+  );
+}
 
-    setStatus(trilha.status);
-  };
+interface TrilhaDetalheViewProps {
+  id: string;
+  trilha: TrilhaDetalhes;
+  video: ReturnType<typeof getReportagemVideo>;
+  requestId: string | null;
+}
+
+function TrilhaDetalheView({ id, trilha, video, requestId }: TrilhaDetalheViewProps) {
+  const {
+    status,
+    acaoSelecionada,
+    isSaving,
+    successMessage,
+    errorMessage: decisionError,
+    selectAcao,
+    persistDecision,
+  } = useTrilhaStatus({ trilhaId: trilha.id, initialStatus: trilha.status });
 
   const handleGerarPDF = () => {
     console.log(`Gerando PDF da trilha ${trilha.id}`);
@@ -56,9 +107,15 @@ export function TrilhaDetalheClient({ id }: TrilhaDetalheClientProps) {
           <Heading as="h1" size="lg" color={themeTokens.textPrimary} fontWeight="bold">
             {trilha.programa}
           </Heading>
-          <Text color={themeTokens.textMuted}>{trilha.data} • {trilha.editoria}</Text>
+          <Text color={themeTokens.textMuted}>
+            {trilha.data} • {trilha.editoria}
+          </Text>
+          {requestId && (
+            <Text color={themeTokens.textMuted} fontSize="sm" mt={1}>
+              Solicitação {requestId}
+            </Text>
+          )}
         </Box>
-
         <Flex direction="column" gap={3} align="flex-end">
           <Box
             px={4}
@@ -71,24 +128,25 @@ export function TrilhaDetalheClient({ id }: TrilhaDetalheClientProps) {
             {status}
           </Box>
 
-          <select
-            value={acaoSelecionada}
-            onChange={handleSelectAcao}
-            style={{
-              width: "220px",
-              padding: "10px 12px",
-              borderRadius: "10px",
-              border: `2px solid ${themeTokens.borderSubtle}`,
-              backgroundColor: "var(--surface-card)",
-              color: themeTokens.textPrimary as string,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <option value="">Selecione uma ação</option>
-            <option value="confirmar">Confirmar trilha</option>
-            <option value="negar">Negar trilha</option>
-          </select>
+          <Flex gap={2}>
+            <Button
+              size="sm"
+              variant={acaoSelecionada === "confirmar" ? "solid" : "outline"}
+              borderRadius="md"
+              onClick={() => selectAcao("confirmar")}
+            >
+              Confirmar trilha
+            </Button>
+            <Button
+              size="sm"
+              variant={acaoSelecionada === "negar" ? "solid" : "outline"}
+              colorScheme="orange"
+              borderRadius="md"
+              onClick={() => selectAcao("negar")}
+            >
+              Negar trilha
+            </Button>
+          </Flex>
         </Flex>
       </Flex>
 
@@ -100,6 +158,7 @@ export function TrilhaDetalheClient({ id }: TrilhaDetalheClientProps) {
             { label: "Programa", value: trilha.programa },
             { label: "Editoria", value: trilha.editoria },
             { label: "Status", value: status },
+            { label: "Processo", value: id },
           ]}
         />
       </Box>
@@ -110,7 +169,24 @@ export function TrilhaDetalheClient({ id }: TrilhaDetalheClientProps) {
         ))}
       </VStack>
 
-      <Flex justify="center" mt={8}>
+      <Flex justify="center" mt={8} gap={4} align="center" flexWrap="wrap">
+        <Button
+          onClick={persistDecision}
+          borderRadius="lg"
+          bg={themeTokens.brandPrimary}
+          color={themeTokens.brandOnPrimary}
+          px={8}
+          py={6}
+          fontSize="md"
+          fontWeight="bold"
+          isLoading={isSaving}
+          loadingText="Salvando"
+          isDisabled={(acaoSelecionada as Acao) === "" || isSaving}
+          _hover={{ bg: themeTokens.brandPrimaryStrong }}
+        >
+          Registrar decisão
+        </Button>
+
         <Button
           onClick={handleGerarPDF}
           borderRadius="lg"
@@ -129,6 +205,13 @@ export function TrilhaDetalheClient({ id }: TrilhaDetalheClientProps) {
           </Flex>
         </Button>
       </Flex>
+
+      <Box mt={6}>
+        <StatusMessage
+          status={successMessage ? "success" : decisionError ? "error" : "idle"}
+          message={successMessage ?? decisionError}
+        />
+      </Box>
     </Box>
   );
 }

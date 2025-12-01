@@ -1,76 +1,80 @@
 import { Box, Flex, Heading, Text } from "@chakra-ui/react";
-import Link from "next/link";
 import { BackLink } from "@/components/back-link";
-import {
-  statusColor,
-  type TrilhaIdentificadaItem,
-} from "@/features/trilhas/types";
-import { trilhasIdentificadas } from "@/features/trilhas/data";
+import { type TrilhaIdentificadaItem } from "@/features/trilhas/types";
 import { themeTokens } from "@/constants/theme";
+import { fetchTrilhasIdentificadas } from "@/features/trilhas/api";
+import { getReportagemVideo } from "@/constants/media";
+import { trilhaDetalhesMap } from "@/features/trilhas/data";
+import { TrilhaHistoryList } from "@/components/trilha-history-list";
 
-export default async function TrilhasIdentificadas() {
-  // TODO: remover atraso quando conectarmos aos dados reais
-  await new Promise((resolve) => setTimeout(resolve, 1200));
+interface TrilhasIdentificadasProps {
+  searchParams?: Promise<{ requestId?: string }>;
+}
+
+export default async function TrilhasIdentificadas({
+  searchParams,
+}: TrilhasIdentificadasProps) {
+  let trilhas: TrilhaIdentificadaItem[] = [];
+  let errorMessage: string | null = null;
+
+  try {
+    trilhas = await fetchTrilhasIdentificadas();
+  } catch (error) {
+    errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Ocorreu um erro ao buscar as trilhas identificadas.";
+  }
+
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const requestId = resolvedSearchParams.requestId;
+
+  const trilhasComVideo = trilhas.map((item) => ({
+    ...item,
+    video: getReportagemVideo(item.id),
+    tracks: trilhaDetalhesMap[item.id]?.tracks.map((track) => track.nome) ?? [item.trilha],
+  }));
 
   return (
     <>
       <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={8} px={32}>
         <Flex align="center" justify="center" mb={8} position="relative">
           <Box position="absolute" left={0}>
-            <BackLink href="/dashboard" />
+            <BackLink href="/page_upload" />
           </Box>
           <Heading as="h1" size="xl" color={themeTokens.textPrimary} fontWeight="bold">
-            Trilhas identificadas
+            Histórico de análises
           </Heading>
         </Flex>
 
+        <Text textAlign="center" color={themeTokens.textMuted} mb={requestId ? 2 : 6}>
+          Acompanhe todas as reportagens já analisadas e acesse novamente o detalhamento de cada trilha.
+        </Text>
+        {requestId && (
+          <Text textAlign="center" color={themeTokens.textMuted} mb={6}>
+            Último envio registrado com o protocolo <strong>{requestId}</strong>
+          </Text>
+        )}
+
         <Box
           bgGradient={themeTokens.panelGradient}
-          borderRadius="lg"
-          p={6}
+          borderRadius="2xl"
+          p={{ base: 6, md: 8 }}
           w="full"
-          maxW="900px"
+          maxW="1100px"
           mx="auto"
         >
-          <Flex direction="column" gap={4}>
-            {trilhasIdentificadas.map((item) => (
-              <Link key={item.id} href={`/trilha-identificada/${item.id}`} style={{ textDecoration: "none" }}>
-                <Box
-                  p={5}
-                  borderRadius="xl"
-                  bg={themeTokens.surfaceMuted}
-                  border={`1px solid ${themeTokens.borderSubtle}`}
-                  transition="all .2s ease"
-                  _hover={{
-                    boxShadow: "0 8px 40px rgba(5, 83, 113, 0.2)",
-                    transform: "translateY(-2px)",
-                  }}
-                >
-                  <Flex justify="space-between" align="center" mb={3}>
-                    <Box>
-                      <Text color={themeTokens.textPrimary} fontWeight="bold" fontSize="lg">
-                        {item.programa}
-                      </Text>
-                      <Text fontSize="sm" color={themeTokens.textMuted}>
-                        {item.timestamp}
-                      </Text>
-                    </Box>
-                    <Box
-                      px={4}
-                      py={1}
-                      borderRadius="full"
-                      fontWeight="bold"
-                      color={statusColor[item.status]}
-                      border={`1px solid ${statusColor[item.status]}`}
-                    >
-                      {item.status}
-                    </Box>
-                  </Flex>
-                  <Text color={themeTokens.textMuted}>Trilha: {item.trilha}</Text>
-                </Box>
-              </Link>
-            ))}
-          </Flex>
+          {errorMessage ? (
+            <Box textAlign="center" color={themeTokens.statusError} fontWeight="semibold">
+              {errorMessage}
+            </Box>
+          ) : trilhasComVideo.length === 0 ? (
+            <Box textAlign="center" color={themeTokens.textMuted} fontWeight="medium">
+              Nenhuma trilha foi identificada para este envio.
+            </Box>
+          ) : (
+            <TrilhaHistoryList items={trilhasComVideo} />
+          )}
         </Box>
       </Box>
     </>

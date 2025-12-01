@@ -43,11 +43,10 @@ export default function Resultados() {
           mx="auto"
           boxShadow="lg"
         >
-          <List.Root margin={0} spaceY={4}>
-            {resultados.map((resultado, index) => (
-              <Link href={`/resultados/${resultado.id}`} key={index} style={{ textDecoration: "none" }}>
+          <List spacing={4}>
+            {resultados.map((resultado) => (
+              <Link href={`/resultados/${resultado.id}`} key={resultado.id} style={{ textDecoration: "none" }}>
                 <ListItem
-                  key={index}
                   bg={themeTokens.surfaceCard}
                   p={4}
                   borderRadius="md"
@@ -73,7 +72,7 @@ export default function Resultados() {
                 </ListItem>
               </Link>
             ))}
-          </List.Root>
+          </List>
         </Box>
       </Box>
     </>

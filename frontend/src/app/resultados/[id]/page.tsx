@@ -1,13 +1,5 @@
 import TrackCard, { type Track } from "@/components/CardTrilha";
-import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-  SimpleGrid,
-  Button,
-} from "@chakra-ui/react";
-import { use } from "react";
+import { Box, Flex, Heading, Text, SimpleGrid, Button } from "@chakra-ui/react";
 import { BackLink } from "@/components/back-link";
 import { themeTokens } from "@/constants/theme";
 import { FileDown } from "lucide-react";
@@ -32,13 +24,12 @@ const mockResultado: Resultado = {
   },
 };
 
-export default function ResultadoDetalhadoPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  // In a real app, you would fetch the data based on params.id
-  const { id } = use(params);
+interface ResultadoDetalhadoPageProps {
+  params: { id: string };
+}
+
+export default function ResultadoDetalhadoPage({ params }: ResultadoDetalhadoPageProps) {
+  const { id } = params;
   const resultado = mockResultado;
   const track = resultado.track;
   const video = getReportagemVideo(id);
