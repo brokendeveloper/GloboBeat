@@ -1,8 +1,16 @@
 "use client";
 
-import { Box, Flex, Heading, Text } from "@chakra-ui/react";
-import { ArrowLeft } from "lucide-react";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  SimpleGrid,
+} from "@chakra-ui/react";
 import Link from "next/link";
+import { BackLink } from "@/components/back-link";
+import { themeTokens } from "@/constants/theme";
 
 interface ValidacaoItem {
   id: string;
@@ -41,73 +49,69 @@ export default function ValidacaoPage() {
 
   return (
     <>
-      <Box as="main" flex={1} bg="white" p={8} px={32}>
-        <Flex align="center" justify="center" mb={8} position="relative">
-          <Box position="absolute" left={0}>
-            <Link href="/page_upload">
-              <Flex
-                align="center"
-                gap={3}
-                color="#055371"
-                fontWeight="semibold"
-                cursor="pointer"
-                _hover={{ color: "#033a4f" }}
-              >
-                <Flex
-                  align="center"
-                  justify="center"
-                  w="32px"
-                  h="32px"
-                  bg="#055371"
-                  borderRadius="full"
-                >
-                  <ArrowLeft size={18} color="white" />
-                </Flex>
-                Voltar
-              </Flex>
-            </Link>
-          </Box>
-          <Heading as="h1" size="xl" color="#055371" fontWeight="bold">
-            Validação
-          </Heading>
+      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={{ base: 6, md: 10 }}>
+        <Flex align="center" justify="space-between" mb={8}>
+          <BackLink href="/page_upload" />
+          <Button variant="outline" color={themeTokens.textPrimary} borderColor={themeTokens.borderSubtle}>
+            Exportar pendências
+          </Button>
         </Flex>
 
-        <Box
-          bg="#055371"
-          borderRadius="lg"
-          p={6}
-          w="full"
-          maxW="900px"
-          mx="auto"
-        >
-          <Flex direction="column" gap={4}>
-            {validacoes.map((item) => (
-              <Link
-                key={item.id}
-                href={`/validacao/${item.id}`}
-                style={{ textDecoration: "none" }}
+        <Heading as="h1" size="2xl" color={themeTokens.textPrimary} fontWeight="bold" mb={3}>
+          Validações pendentes
+        </Heading>
+        <Text color={themeTokens.textMuted} mb={8}>
+          Acompanhe o fluxo de validação e priorize casos críticos.
+        </Text>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={5} maxW="1100px">
+          {validacoes.map((item) => (
+            <Link key={item.id} href={`/validacao/${item.id}`} style={{ textDecoration: "none" }}>
+              <Box
+                borderRadius="2xl"
+                p={5}
+                bg={themeTokens.surfaceCard}
+                border={`1px solid ${themeTokens.borderSubtle}`}
+                boxShadow="md"
+                _hover={{ boxShadow: "0 10px 40px rgba(5,83,113,0.2)", transform: "translateY(-2px)" }}
+                transition="all 0.2s ease"
               >
-                <Flex
-                  bg="white"
-                  p={4}
-                  borderRadius="md"
-                  justify="space-between"
-                  align="center"
-                  cursor="pointer"
-                  _hover={{ bg: "gray.50" }}
-                  transition="background 0.2s"
-                >
-                  <Text color="#055371" fontWeight="semibold" fontSize="md">
-                    {item.data} - {item.reportagem}
-                  </Text>
-                  <Text color="#FFC107" fontWeight="bold" fontSize="md">
+                <Flex justify="space-between" align="flex-start">
+                  <Box>
+                    <Text fontSize="sm" color={themeTokens.textMuted}>
+                      {item.data}
+                    </Text>
+                    <Heading as="h3" size="md" color={themeTokens.textPrimary} mt={1}>
+                      {item.reportagem}
+                    </Heading>
+                  </Box>
+                  <Box
+                    px={4}
+                    py={1}
+                    borderRadius="full"
+                    bg="rgba(247, 183, 49, 0.1)"
+                    border={`1px solid ${themeTokens.statusWarning}`}
+                    color={themeTokens.statusWarning}
+                    fontWeight="bold"
+                  >
                     {item.status}
-                  </Text>
+                  </Box>
                 </Flex>
-              </Link>
-            ))}
-          </Flex>
-        </Box>
+                <Text mt={4} color={themeTokens.textMuted} fontSize="sm">
+                  Responsável: Equipe Editorial
+                </Text>
+                <Flex mt={3} gap={2}>
+                  <Button size="sm" variant="ghost" color={themeTokens.statusSuccess}>
+                    Aprovar
+                  </Button>
+                  <Button size="sm" variant="ghost" color={themeTokens.statusError}>
+                    Rejeitar
+                  </Button>
+                </Flex>
+              </Box>
+            </Link>
+          ))}
+        </SimpleGrid>
       </Box>
     </>
   );
