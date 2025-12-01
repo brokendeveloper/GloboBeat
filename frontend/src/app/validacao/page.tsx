@@ -49,8 +49,8 @@ export default function ValidacaoPage() {
 
   return (
     <>
-      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={{ base: 6, md: 10 }}>
-        <Flex align="center" justify="space-between" mb={8}>
+      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={{ base: 6, md: 10 }} display="flex" flexDirection="column" alignItems="center">
+        <Flex align="center" justifyContent="space-between" mb={8} w="100%">
           <BackLink href="/page_upload" />
           <Button variant="outline" color={themeTokens.textPrimary} borderColor={themeTokens.borderSubtle}>
             Exportar pendências
@@ -64,7 +64,7 @@ export default function ValidacaoPage() {
           Acompanhe o fluxo de validação e priorize casos críticos.
         </Text>
 
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap={5} maxW="1100px">
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={10} maxW="1000px">
           {validacoes.map((item) => (
             <Link key={item.id} href={`/validacao/${item.id}`} style={{ textDecoration: "none" }}>
               <Box

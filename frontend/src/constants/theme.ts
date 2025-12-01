@@ -1,0 +1,18 @@
+export const themeTokens = {
+  brandPrimary: "var(--brand-primary)",
+  brandPrimaryStrong: "var(--brand-primary-strong)",
+  brandOnPrimary: "var(--brand-on-primary)",
+  textPrimary: "var(--text-primary)",
+  textMuted: "var(--text-muted)",
+  surfaceBg: "var(--surface-bg)",
+  surfaceCard: "var(--surface-card)",
+  surfaceMuted: "var(--surface-muted)",
+  borderSubtle: "var(--border-subtle)",
+  footerText: "var(--footer-text)",
+  footerSubtle: "var(--footer-subtle)",
+  statusSuccess: "var(--status-success)",
+  statusWarning: "var(--status-warning)",
+  statusError: "var(--status-error)",
+  brandGradient: "var(--brand-gradient)",
+  panelGradient: "var(--panel-gradient)",
+};

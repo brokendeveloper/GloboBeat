@@ -7,6 +7,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Box, Button, Input, Text, VStack, Flex } from "@chakra-ui/react"
 import { Field } from "@/components/ui/field"
+import { themeTokens } from "@/constants/theme"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -20,7 +21,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen m-0 p-0 bg-gradient-to-b from-[#055371] to-[#001821] bg-fixed text-foreground">
+    <div className="min-h-screen m-0 p-0 bg-gradient-to-b from-[var(--brand-primary)] to-[var(--brand-primary-strong)] bg-fixed text-foreground">
       <Flex direction="column" minH="100vh">
         <Box as="header" w="full" px={8} py={6}>
           <Flex align="center" justify="space-between">
@@ -35,7 +36,7 @@ export default function LoginPage() {
                 </Button>
               </Link>
               <Link href="/cadastro">
-                <Button bg="white" color="#055371" borderRadius="full" fontWeight="medium" _hover={{ bg: "gray.100" }}>
+                <Button bg={themeTokens.surfaceCard} color="var(--brand-primary)" borderRadius="full" fontWeight="medium" _hover={{ bg: themeTokens.surfaceMuted }}>
                   Registre-se
                 </Button>
               </Link>
@@ -65,8 +66,8 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                    bg="whiteAlpha.900"
-                    color="gray.800"
+                    bg={themeTokens.surfaceCard}
+                    color={themeTokens.textPrimary}
                     borderRadius="lg"
                     size="lg"
                     required
@@ -79,8 +80,8 @@ export default function LoginPage() {
                     type="password"
                     value={senha}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSenha(e.target.value)}
-                    bg="whiteAlpha.900"
-                    color="gray.800"
+                    bg={themeTokens.surfaceCard}
+                    color={themeTokens.textPrimary}
                     borderRadius="lg"
                     size="lg"
                     required
@@ -91,13 +92,13 @@ export default function LoginPage() {
                 <Flex justify="center" pt={4}>
                   <Button
                     type="submit"
-                    bg="#055371"
+                    bg="var(--brand-primary)"
                     color="white"
                     px={12}
                     py={6}
                     borderRadius="lg"
                     fontWeight="semibold"
-                    _hover={{ bg: "#044560" }}
+                    _hover={{ bg: "var(--brand-primary-strong)" }}
                   >
                     Entrar
                   </Button>

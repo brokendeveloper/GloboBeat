@@ -4,6 +4,7 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { Box, Flex, IconButton, Text, VStack } from "@chakra-ui/react";
 import { UploadCloud, X } from "lucide-react";
+import { themeTokens } from "@/constants/theme";
 
 export default function DashboardPage() {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
@@ -68,11 +69,13 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Flex as="main" flex={1} align="center" justify="center" px={4} py={8}>
+      <Flex as="main" flex={1} align="center" justify="center" px={4} py={8} bg={themeTokens.surfaceBg}>
         <Box
           w="full"
           maxW="2xl"
-          bg="white"
+          bgGradient={themeTokens.panelGradient}
+          border="1px solid"
+          borderColor={themeTokens.borderSubtle}
           borderRadius="2xl"
           p={{ base: 8, md: 12 }}
           boxShadow="2xl"
@@ -81,7 +84,7 @@ export default function DashboardPage() {
             <Text
               fontSize="2xl"
               fontWeight="bold"
-              color="#055371"
+              color={themeTokens.textPrimary}
               textAlign="center"
             >
               Faça upload da sua reportagem
@@ -89,7 +92,7 @@ export default function DashboardPage() {
 
             <Text
               fontSize="sm"
-              color="gray.600"
+              color={themeTokens.textMuted}
               textAlign="center"
               lineHeight="relaxed"
             >
@@ -113,14 +116,14 @@ export default function DashboardPage() {
                 as="label"
                 htmlFor="file-upload"
                 border="2px dashed"
-                borderColor="gray.300"
-                bg="gray.50"
+                borderColor={themeTokens.borderSubtle}
+                bg={themeTokens.surfaceMuted}
                 borderRadius="xl"
                 p={{ base: 6, md: 8 }}
                 textAlign="center"
                 cursor="pointer"
                 transition="all 0.2s ease"
-                _hover={{ borderColor: "#055371" }}
+                _hover={{ borderColor: themeTokens.brandPrimary }}
               >
                 <VStack gap={3}>
                   <Flex
@@ -129,19 +132,19 @@ export default function DashboardPage() {
                     w="64px"
                     h="64px"
                     borderRadius="full"
-                    bg="white"
+                    bg={themeTokens.surfaceCard}
                     boxShadow="sm"
                     mx="auto"
                   >
-                    <UploadCloud size={28} color="#055371" />
+                    <UploadCloud size={28} color="var(--brand-primary)" />
                   </Flex>
-                  <Text fontWeight="semibold" color="#055371">
+                  <Text fontWeight="semibold" color={themeTokens.textPrimary}>
                     Clique ou arraste para enviar seu vídeo
                   </Text>
-                  <Text fontSize="sm" color="gray.500">
+                  <Text fontSize="sm" color={themeTokens.textMuted}>
                     Aceitamos MP4, MOV, MKV com até 2GB
                   </Text>
-                  <Text fontSize="xs" color="gray.400">
+                  <Text fontSize="xs" color={themeTokens.textMuted}>
                     ou arraste o arquivo para esta área
                   </Text>
                 </VStack>
@@ -151,10 +154,10 @@ export default function DashboardPage() {
             {selectedVideo && (
               <Box
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor={themeTokens.borderSubtle}
                 borderRadius="xl"
                 p={5}
-                bg="white"
+                bg={themeTokens.surfaceMuted}
                 boxShadow="lg"
               >
                 <Flex
@@ -164,10 +167,10 @@ export default function DashboardPage() {
                   gap={4}
                 >
                   <Box>
-                    <Text color="#055371" fontWeight="bold">
+                    <Text color={themeTokens.textPrimary} fontWeight="bold">
                       {selectedVideo.name}
                     </Text>
-                    <Text color="gray.500" fontSize="sm">
+                    <Text color={themeTokens.textMuted} fontSize="sm">
                       {formatFileSize(selectedVideo.size)} •{" "}
                       {selectedVideo.type || "Vídeo"}
                     </Text>
@@ -177,7 +180,7 @@ export default function DashboardPage() {
                     onClick={handleRemoveFile}
                     size="sm"
                     variant="ghost"
-                    color="#C53030"
+                    color={themeTokens.statusError}
                   >
                     <X size={18} />
                   </IconButton>

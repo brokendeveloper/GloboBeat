@@ -2,10 +2,12 @@
 
 import { Box, Button, Flex, IconButton, Input, Text, VStack } from "@chakra-ui/react";
 import Image from "next/image";
-import { Menu, Search, User } from "lucide-react";
+import { Menu, Moon, Search, Sun, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useThemeMode } from "@/components/theme-provider";
+import { themeTokens } from "@/constants/theme";
 
 interface SearchResult {
   id: string;
@@ -31,18 +33,12 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    if (isSearchOpen) {
-      searchInputRef.current?.focus();
-    }
-  }, [isSearchOpen]);
+  const { theme, toggleTheme } = useThemeMode();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,7 +70,6 @@ export function Header({ onMenuClick }: HeaderProps) {
     router.push(link);
     setSearchQuery("");
     setShowResults(false);
-    setIsSearchOpen(false);
   };
 
   const getTypeLabel = (type: string) => {
@@ -88,22 +83,36 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "musica": return "#00C853";
-      case "reportagem": return "#2196F3";
-      case "validacao": return "#FFC107";
-      default: return "#055371";
+      case "musica":
+        return themeTokens.statusSuccess;
+      case "reportagem":
+        return themeTokens.brandOnPrimary;
+      case "validacao":
+        return themeTokens.statusWarning;
+      default:
+        return themeTokens.brandPrimary;
     }
   };
+
+  const headerBorder = themeTokens.borderSubtle;
+  const searchBg = themeTokens.surfaceCard;
+  const searchText = themeTokens.textPrimary;
+  const accentColor = themeTokens.brandOnPrimary;
+  const resultsBg = themeTokens.surfaceCard;
+  const resultsBorder = themeTokens.borderSubtle;
+  const resultsHover = themeTokens.surfaceMuted;
+  const resultsDivider = themeTokens.borderSubtle;
+  const resultsSubtitle = themeTokens.textMuted;
 
   return (
     <Box
       as="header"
       w="full"
-      bg="#055371"
       borderBottom="2px solid"
-      borderColor="whiteAlpha.300"
+      borderColor={headerBorder}
       px={8}
       py={4}
+      bgGradient={themeTokens.brandGradient}
     >
       <Flex align="center" justify="space-between">
         <Flex flex={1} align="center">
@@ -112,7 +121,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               aria-label="Abrir menu"
               onClick={onMenuClick}
               variant="ghost"
-              color="white"
+              color={accentColor}
               _hover={{ bg: "whiteAlpha.200" }}
               size="sm"
             >
@@ -136,55 +145,51 @@ export function Header({ onMenuClick }: HeaderProps) {
 
         {/* Ícones à direita */}
         <Flex flex={1} justify="flex-end" align="center" gap={4}>
-          <Box position="relative" ref={searchContainerRef}>
+          <Box position="relative" ref={searchContainerRef} minW={{ base: "200px", md: "320px" }}>
             <Flex
               align="center"
-              bg="white"
+              bg={searchBg}
               borderRadius="full"
               border="1px solid"
-              borderColor="whiteAlpha.400"
+              borderColor={themeTokens.borderSubtle}
               py={1}
-              pl={isSearchOpen ? 4 : 1}
-              pr={1}
-              transition="all 0.3s ease"
-              minH="40px"
-              overflow="hidden"
-              gap={isSearchOpen ? 3 : 0}
+              pl={3}
+              pr={2}
+              minH="42px"
+              gap={2}
             >
+              <Box
+                as="span"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                color={themeTokens.brandPrimary}
+              >
+                <Search size={16} />
+              </Box>
               <Input
                 ref={searchInputRef}
                 value={searchQuery}
                 onChange={handleSearchChange}
-                variant="outline"
-                border="none"
-                _focusVisible={{ boxShadow: "none" }}
-                _focus={{ boxShadow: "none" }}
-                placeholder="Buscar"
-                color="#055371"
-                width={isSearchOpen ? "180px" : "0px"}
-                opacity={isSearchOpen ? 1 : 0}
-                transition="width 0.3s ease, opacity 0.3s ease"
-                minW={0}
-                pointerEvents={isSearchOpen ? "auto" : "none"}
+                variant="unstyled"
+                placeholder="Buscar músicas ou reportagens"
+                color={searchText}
+                _placeholder={{ color: resultsSubtitle }}
               />
-              <Button
-                type="button"
-                onClick={() => setIsSearchOpen((prev) => !prev)}
-                variant="solid"
-                bg="#055371"
-                color="white"
-                w="32px"
-                h="32px"
-                minW="32px"
-                borderRadius="full"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                _hover={{ bg: "#033a4f" }}
-                aria-label="Buscar"
-              >
-                <Search size={18} />
-              </Button>
+              {searchQuery && (
+                <IconButton
+                  aria-label="Limpar busca"
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setShowResults(false);
+                    searchInputRef.current?.focus();
+                  }}
+                >
+                  ×
+                </IconButton>
+              )}
             </Flex>
 
             {/* Search Results Dropdown */}
@@ -193,11 +198,11 @@ export function Header({ onMenuClick }: HeaderProps) {
                 position="absolute"
                 top="calc(100% + 8px)"
                 right={0}
-                bg="white"
+                bg={resultsBg}
                 borderRadius="md"
                 boxShadow="lg"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor={resultsBorder}
                 minW="300px"
                 maxH="400px"
                 overflowY="auto"
@@ -209,18 +214,18 @@ export function Header({ onMenuClick }: HeaderProps) {
                       key={result.id}
                       p={3}
                       cursor="pointer"
-                      _hover={{ bg: "gray.50" }}
+                      _hover={{ bg: resultsHover }}
                       borderBottom="1px solid"
-                      borderColor="gray.100"
+                      borderColor={resultsDivider}
                       onClick={() => handleResultClick(result.link)}
                     >
                       <Flex justify="space-between" align="center" gap={3}>
                         <Box flex={1}>
-                          <Text color="#055371" fontWeight="semibold" fontSize="sm">
+                          <Text color={searchText} fontWeight="semibold" fontSize="sm">
                             {result.title}
                           </Text>
                           {result.subtitle && (
-                            <Text color="gray.600" fontSize="xs">
+                            <Text color={resultsSubtitle} fontSize="xs">
                               {result.subtitle}
                             </Text>
                           )}
@@ -248,24 +253,35 @@ export function Header({ onMenuClick }: HeaderProps) {
                 position="absolute"
                 top="calc(100% + 8px)"
                 right={0}
-                bg="white"
+                bg={resultsBg}
                 borderRadius="md"
                 boxShadow="lg"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor={resultsBorder}
                 minW="300px"
                 p={4}
                 zIndex={1000}
               >
-                <Text color="gray.500" fontSize="sm" textAlign="center">
+                <Text color={resultsSubtitle} fontSize="sm" textAlign="center">
                   Nenhum resultado encontrado
                 </Text>
               </Box>
             )}
           </Box>
+
+          <IconButton
+            aria-label={theme === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
+            onClick={toggleTheme}
+            variant="ghost"
+            color={accentColor}
+            _hover={{ bg: "whiteAlpha.200" }}
+            size="sm"
+          >
+            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+          </IconButton>
           <Button
             variant="ghost"
-            color="white"
+            color={accentColor}
             size="sm"
             _hover={{ bg: "whiteAlpha.200" }}
             aria-label="Perfil"

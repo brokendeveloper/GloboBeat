@@ -1,8 +1,9 @@
 "use client";
 
 import { Box, Flex, Heading, ListItem, Text, List } from "@chakra-ui/react";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { BackLink } from "@/components/back-link";
+import { themeTokens } from "@/constants/theme";
 
 export interface Resultado {
   nome: string;
@@ -22,70 +23,49 @@ export default function Resultados() {
 
   return (
     <>
-      <Box as="main" flex={1} bg="white" p={8} px={32}>
+      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={8} px={32}>
         <Flex align="center" justify="center" mb={8} position="relative">
           <Box position="absolute" left={0}>
-            <Link href="/page_upload">
-              <Flex
-                align="center"
-                gap={3}
-                color="#055371"
-                fontWeight="semibold"
-                cursor="pointer"
-                _hover={{ color: "#033a4f" }}
-              >
-                <Flex
-                  align="center"
-                  justify="center"
-                  w="32px"
-                  h="32px"
-                  bg="#055371"
-                  borderRadius="full"
-                >
-                  <ArrowLeft size={18} color="white" />
-                </Flex>
-                Voltar
-              </Flex>
-            </Link>
+            <BackLink href="/page_upload" />
           </Box>
-          <Heading as="h1" size="xl" color="#055371" fontWeight="bold">
+          <Heading as="h1" size="xl" color={themeTokens.textPrimary} fontWeight="bold">
             Resultados
           </Heading>
         </Flex>
         <Box
-          bg="#055371"
-          border="2px solid white"
-          borderRadius="lg"
+          bgGradient={themeTokens.panelGradient}
+          border="1px solid"
+          borderColor={themeTokens.borderSubtle}
+          borderRadius="2xl"
           p={6}
           w="full"
-          maxW="800px"
+          maxW="900px"
           mx="auto"
+          boxShadow="lg"
         >
           <List.Root margin={0} spaceY={4}>
             {resultados.map((resultado, index) => (
-              <Link
-                href={`/resultados/${resultado.id}`}
-                key={index}
-                style={{ textDecoration: "none" }}
-              >
+              <Link href={`/resultados/${resultado.id}`} key={index} style={{ textDecoration: "none" }}>
                 <ListItem
                   key={index}
-                  bg="white"
-                  p={3}
+                  bg={themeTokens.surfaceCard}
+                  p={4}
                   borderRadius="md"
                   display="flex"
                   justifyContent="space-between"
                   alignItems="center"
-                  color="black"
+                  color={themeTokens.textPrimary}
+                  border={`1px solid ${themeTokens.borderSubtle}`}
+                  _hover={{ boxShadow: "0 8px 30px rgba(5,83,113,0.15)" }}
                 >
                   <Box>
                     <Text fontWeight="bold">{resultado.nome}</Text>
-                    <Text fontSize="sm" color="gray.600">{resultado.banda}</Text>
+                    <Text fontSize="sm" color={themeTokens.textMuted}>
+                      {resultado.banda}
+                    </Text>
                   </Box>
                   <Text
-                    color={
-                      resultado.status === "Livre" ? "green.500" : "red.500"
-                    }
+                    color={resultado.status === "Livre" ? themeTokens.statusSuccess : themeTokens.statusError}
                     fontWeight="bold"
                   >
                     {resultado.status}

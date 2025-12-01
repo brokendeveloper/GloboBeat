@@ -1,91 +1,31 @@
-"use client";
-
 import { Box, Flex, Heading, Text } from "@chakra-ui/react";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { BackLink } from "@/components/back-link";
+import {
+  statusColor,
+  type TrilhaIdentificadaItem,
+} from "@/features/trilhas/types";
+import { trilhasIdentificadas } from "@/features/trilhas/data";
+import { themeTokens } from "@/constants/theme";
 
-type TrilhaStatus = "Identificada" | "Revisão Necessária";
+export default async function TrilhasIdentificadas() {
+  // TODO: remover atraso quando conectarmos aos dados reais
+  await new Promise((resolve) => setTimeout(resolve, 1200));
 
-interface TrilhaIdentificadaItem {
-  id: string;
-  timestamp: string;
-  programa: string;
-  trilha: string;
-  status: TrilhaStatus;
-}
-
-const statusColor: Record<TrilhaStatus, string> = {
-  Identificada: "#00C853",
-  "Revisão Necessária": "#FFC107",
-};
-
-const trilhasIdentificadas: TrilhaIdentificadaItem[] = [
-  {
-    id: "1",
-    timestamp: "00:23 - 01:00",
-    programa: "Manhã Globo",
-    trilha: "Oceano - Djavan",
-    status: "Identificada",
-  },
-  {
-    id: "2",
-    timestamp: "00:45 - 01:15",
-    programa: "Radar Cultural",
-    trilha: "Primavera - Tim Maia",
-    status: "Revisão Necessária",
-  },
-  {
-    id: "3",
-    timestamp: "00:10 - 00:37",
-    programa: "Noite Beatles",
-    trilha: "Something - The Beatles",
-    status: "Identificada",
-  },
-  {
-    id: "4",
-    timestamp: "01:05 - 01:44",
-    programa: "Conexão GloboNews",
-    trilha: "Chega de Saudade - João Gilberto",
-    status: "Revisão Necessária",
-  },
-];
-
-export default function TrilhasIdentificadas() {
   return (
     <>
-      <Box as="main" flex={1} bg="white" p={8} px={32}>
+      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={8} px={32}>
         <Flex align="center" justify="center" mb={8} position="relative">
           <Box position="absolute" left={0}>
-            <Link href="/dashboard">
-              <Flex
-                align="center"
-                gap={3}
-                color="#055371"
-                fontWeight="semibold"
-                cursor="pointer"
-                _hover={{ color: "#033a4f" }}
-              >
-                <Flex
-                  align="center"
-                  justify="center"
-                  w="32px"
-                  h="32px"
-                  bg="#055371"
-                  borderRadius="full"
-                >
-                  <ArrowLeft size={18} color="white" />
-                </Flex>
-                Voltar
-              </Flex>
-            </Link>
+            <BackLink href="/dashboard" />
           </Box>
-          <Heading as="h1" size="xl" color="#055371" fontWeight="bold">
+          <Heading as="h1" size="xl" color={themeTokens.textPrimary} fontWeight="bold">
             Trilhas identificadas
           </Heading>
         </Flex>
 
         <Box
-          bg="#055371"
+          bgGradient={themeTokens.panelGradient}
           borderRadius="lg"
           p={6}
           w="full"
@@ -94,40 +34,40 @@ export default function TrilhasIdentificadas() {
         >
           <Flex direction="column" gap={4}>
             {trilhasIdentificadas.map((item) => (
-              <Link
-                key={item.id}
-                href={`/trilha-identificada/${item.id}`}
-                style={{ textDecoration: "none" }}
-              >
-                <Flex
-                  bg="white"
-                  p={4}
-                  borderRadius="md"
-                  justify="space-between"
-                  align="center"
-                  cursor="pointer"
-                  _hover={{ bg: "gray.50" }}
-                  transition="background 0.2s"
+              <Link key={item.id} href={`/trilha-identificada/${item.id}`} style={{ textDecoration: "none" }}>
+                <Box
+                  p={5}
+                  borderRadius="xl"
+                  bg={themeTokens.surfaceMuted}
+                  border={`1px solid ${themeTokens.borderSubtle}`}
+                  transition="all .2s ease"
+                  _hover={{
+                    boxShadow: "0 8px 40px rgba(5, 83, 113, 0.2)",
+                    transform: "translateY(-2px)",
+                  }}
                 >
-                  <Box>
-                    <Text color="#055371" fontWeight="semibold" fontSize="md">
-                      {item.programa}
-                    </Text>
-                    <Text color="#4A5568" fontSize="sm">
-                      Trilha: {item.trilha}
-                    </Text>
-                    <Text color="#4A5568" fontSize="sm">
-                      Tempo: {item.timestamp}
-                    </Text>
-                  </Box>
-                  <Text
-                    color={statusColor[item.status]}
-                    fontWeight="bold"
-                    fontSize="md"
-                  >
-                    {item.status}
-                  </Text>
-                </Flex>
+                  <Flex justify="space-between" align="center" mb={3}>
+                    <Box>
+                      <Text color={themeTokens.textPrimary} fontWeight="bold" fontSize="lg">
+                        {item.programa}
+                      </Text>
+                      <Text fontSize="sm" color={themeTokens.textMuted}>
+                        {item.timestamp}
+                      </Text>
+                    </Box>
+                    <Box
+                      px={4}
+                      py={1}
+                      borderRadius="full"
+                      fontWeight="bold"
+                      color={statusColor[item.status]}
+                      border={`1px solid ${statusColor[item.status]}`}
+                    >
+                      {item.status}
+                    </Box>
+                  </Flex>
+                  <Text color={themeTokens.textMuted}>Trilha: {item.trilha}</Text>
+                </Box>
               </Link>
             ))}
           </Flex>

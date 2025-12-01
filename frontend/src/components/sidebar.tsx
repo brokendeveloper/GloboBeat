@@ -3,17 +3,13 @@
 import Link from "next/link";
 import { Box, Flex, IconButton, Text } from "@chakra-ui/react";
 import { X } from "lucide-react";
+import { NAV_LINKS } from "@/constants/navigation";
+import { themeTokens } from "@/constants/theme";
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const menuItems = [
-  { label: "Histórico", href: "/historico" },
-  { label: "Validação", href: "/validacao" },
-  { label: "Dashboard", href: "/dashboard" },
-];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
@@ -38,7 +34,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         left={0}
         h="100vh"
         w="260px"
-        bg="#055371"
         borderRight="2px solid"
         borderColor="whiteAlpha.300"
         transform={isOpen ? "translateX(0)" : "translateX(-100%)"}
@@ -47,13 +42,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         display="flex"
         flexDirection="column"
         p={4}
+        bgGradient={themeTokens.brandGradient}
       >
         <Flex justify="flex-end">
           <IconButton
             aria-label="Fechar menu"
             onClick={onClose}
             variant="ghost"
-            color="white"
+            color={themeTokens.brandOnPrimary}
             _hover={{ bg: "whiteAlpha.200" }}
             size="sm"
           >
@@ -62,13 +58,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </Flex>
 
         <Flex direction="column" gap={3} mt={8}>
-          {menuItems.map((item) => (
+          {NAV_LINKS.map((item) => (
             <Link key={item.href} href={item.href}>
               <Box
                 px={4}
                 py={3}
                 borderRadius="md"
-                color="white"
+                color={themeTokens.brandOnPrimary}
                 fontWeight="medium"
                 cursor="pointer"
                 transition="all 0.2s"

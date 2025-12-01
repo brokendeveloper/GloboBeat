@@ -1,8 +1,9 @@
 "use client";
 
-import { Box, Flex, Heading, Text } from "@chakra-ui/react";
-import { ArrowLeft } from "lucide-react";
+import { Box, Flex, Heading, Text, Button, SimpleGrid } from "@chakra-ui/react";
 import Link from "next/link";
+import { BackLink } from "@/components/back-link";
+import { themeTokens } from "@/constants/theme";
 
 interface HistoricoItem {
   id: string;
@@ -53,81 +54,60 @@ export default function HistoricoPage() {
 
   return (
     <>
-      <Box as="main" flex={1} bg="white" p={8} px={32}>
-        <Flex align="center" justify="center" mb={8} position="relative">
-          <Box position="absolute" left={0}>
-            <Link href="/page_upload">
-              <Flex
-                align="center"
-                gap={3}
-                color="#055371"
-                fontWeight="semibold"
-                cursor="pointer"
-                _hover={{ color: "#033a4f" }}
-              >
-                <Flex
-                  align="center"
-                  justify="center"
-                  w="32px"
-                  h="32px"
-                  bg="#055371"
-                  borderRadius="full"
-                >
-                  <ArrowLeft size={18} color="white" />
-                </Flex>
-                Voltar
-              </Flex>
-            </Link>
-          </Box>
-          <Heading as="h1" size="xl" color="#055371" fontWeight="bold">
-            Histórico
-          </Heading>
+      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={{ base: 6, md: 10 }}>
+        <Flex align="center" justify="space-between" mb={8}>
+          <BackLink href="/page_upload" />
+          <Button variant="ghost" color={themeTokens.textPrimary}>
+            Exportar histórico
+          </Button>
         </Flex>
 
-        <Box
-          bg="#055371"
-          borderRadius="lg"
-          p={6}
-          w="full"
-          maxW="900px"
-          mx="auto"
-        >
-          <Flex direction="column" gap={4}>
-            {historico.map((item) => (
-              <Link
-                key={item.id}
-                href={`/historico/${item.id}`}
-                style={{ textDecoration: "none" }}
+        <Heading as="h1" size="2xl" color={themeTokens.textPrimary} fontWeight="bold">
+          Histórico de validações
+        </Heading>
+        <Text color={themeTokens.textMuted} mb={8}>
+          Consulte as últimas decisões e acompanhe as reportagens validadas.
+        </Text>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={5}>
+          {historico.map((item) => (
+            <Link key={item.id} href={`/historico/${item.id}`} style={{ textDecoration: "none" }}>
+              <Box
+                borderRadius="2xl"
+                p={5}
+                bg={themeTokens.surfaceCard}
+                border={`1px solid ${themeTokens.borderSubtle}`}
+                boxShadow="lg"
+                _hover={{ boxShadow: "0 10px 40px rgba(5,83,113,0.18)", transform: "translateY(-2px)" }}
+                transition="all .2s ease"
               >
-                <Flex
-                  bg="white"
-                  p={4}
-                  borderRadius="md"
-                  justify="space-between"
-                  align="center"
-                  cursor="pointer"
-                  _hover={{ bg: "gray.50" }}
-                  transition="background 0.2s"
+                <Text fontSize="sm" color={themeTokens.textMuted}>
+                  {item.data}
+                </Text>
+                <Heading as="h3" size="md" color={themeTokens.textPrimary} mt={2}>
+                  {item.reportagem}
+                </Heading>
+                <Text mt={2} color={themeTokens.textMuted} fontSize="sm">
+                  Editor responsável: Equipe RJ
+                </Text>
+                <Box
+                  mt={4}
+                  px={4}
+                  py={1}
+                  borderRadius="full"
+                  color={item.status === "Validação Confirmada" ? themeTokens.statusSuccess : themeTokens.statusError}
+                  border={`1px solid ${
+                    item.status === "Validação Confirmada" ? themeTokens.statusSuccess : themeTokens.statusError
+                  }`}
+                  fontWeight="bold"
+                  width="fit-content"
                 >
-                  <Text color="#055371" fontWeight="semibold" fontSize="md">
-                    {item.data} - {item.reportagem}
-                  </Text>
-                  <Text
-                    color={
-                      item.status === "Validação Confirmada"
-                        ? "#00C853"
-                        : "#FF1744"
-                    }
-                    fontWeight="bold"
-                    fontSize="md"
-                  >
-                    {item.status}
-                  </Text>
-                </Flex>
-              </Link>
-            ))}
-          </Flex>
-        </Box>
+                  {item.status}
+                </Box>
+              </Box>
+            </Link>
+          ))}
+        </SimpleGrid>
       </Box>
     </>
   );

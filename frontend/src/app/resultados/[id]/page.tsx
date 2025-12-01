@@ -1,53 +1,18 @@
-"use client";
-
-import { Box, Flex, Heading, Text, VStack, Button } from "@chakra-ui/react";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import TrackCard, { type Track } from "@/components/CardTrilha";
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+  SimpleGrid,
+  Button,
+} from "@chakra-ui/react";
 import { use } from "react";
-
-// This component is defined locally to match the UI, as CardTrilha is not suitable.
-function TrackCard(props: {
-  nome: string;
-  album: string;
-  banda: string;
-  timestamp: string;
-  politica: string;
-  gMusicID: string;
-}) {
-  return (
-    <Box bg="#055371" p={5} rounded="md" color="white">
-      <VStack align="stretch" spacing={2}>
-        <Text>
-          <strong>Nome:</strong> {props.nome}
-        </Text>
-        <Text>
-          <strong>Albúm:</strong> {props.album}
-        </Text>
-        <Text>
-          <strong>Banda:</strong> {props.banda}
-        </Text>
-        <Text>
-          <strong>Timestamp:</strong> {props.timestamp}
-        </Text>
-        <Text>
-          <strong>Política:</strong> {props.politica}
-        </Text>
-        <Text>
-          <strong>G music ID:</strong> {props.gMusicID}
-        </Text>
-      </VStack>
-    </Box>
-  );
-}
-
-interface Track {
-  nome: string;
-  album: string;
-  banda: string;
-  timestamp: string;
-  politica: string;
-  gMusicID: string;
-}
+import { BackLink } from "@/components/back-link";
+import { themeTokens } from "@/constants/theme";
+import { FileDown } from "lucide-react";
+import { ReportagemVideoPanel } from "@/components/reportagem-video-panel";
+import { getReportagemVideo } from "@/constants/media";
 
 interface Resultado {
   id: string;
@@ -76,54 +41,56 @@ export default function ResultadoDetalhadoPage({
   const { id } = use(params);
   const resultado = mockResultado;
   const track = resultado.track;
+  const video = getReportagemVideo(id);
 
   return (
     <>
-      <Box as="main" flex={1} bg="white" p={8}>
-        <Flex align="center" justify="space-evenly" mb={8}>
-          <Link href="/resultados" passHref>
-            <Button
-              as="a"
-              variant="ghost"
-              px={0}
-              display="flex"
-              alignItems="center"
-              gap={3}
-              color="#055371"
-              fontWeight="semibold"
-              _hover={{ bg: "transparent", color: "#033a4f" }}
-            >
-              <Flex
-                align="center"
-                justify="center"
-                w="32px"
-                h="32px"
-                bg="#055371"
-                borderRadius="full"
-              >
-                <ArrowLeft size={18} color="white" />
-              </Flex>
-              Voltar
-            </Button>
-          </Link>
-          <Heading as="h1" size="lg" color="black">
-            {`${track.nome} - ${track.banda}`}
-          </Heading>
-          <Box w="80px" /> {/* To balance the flex layout */}
+      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={8}>
+        <Flex align="center" justify="space-between" mb={8}>
+          <BackLink href="/resultados" />
+          <Box textAlign="center" flex={1}>
+            <Text fontSize="sm" color={themeTokens.textMuted}>
+              Resultado analisado
+            </Text>
+            <Heading as="h1" size="lg" color={themeTokens.textPrimary}>
+              {`${track.nome} • ${track.banda}`}
+            </Heading>
+            <Text color={themeTokens.textMuted}>{track.album}</Text>
+          </Box>
+          <Button
+            leftIcon={<FileDown size={16} />}
+            bg={themeTokens.brandPrimary}
+            color={themeTokens.brandOnPrimary}
+            borderRadius="full"
+            _hover={{ bg: themeTokens.brandPrimaryStrong }}
+          >
+            Exportar
+          </Button>
         </Flex>
 
-        <VStack minW="800px" mx="auto">
-          <TrackCard
-            key={track.gMusicID}
-            nome={track.nome}
-            album={track.album}
-            banda={track.banda}
-            timestamp={track.timestamp}
-            politica={track.politica}
-            gMusicID={track.gMusicID}
+        <Box maxW="900px" mx="auto" mb={8}>
+          <ReportagemVideoPanel
+            title="Trecho identificado"
+            video={video}
+            metadata={[
+              { label: "Faixa", value: track.nome },
+              { label: "Programa", value: "Manhã Globo" },
+              { label: "Timestamp", value: track.timestamp },
+            ]}
           />
+        </Box>
 
-        </VStack>
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} maxW="900px" mx="auto">
+          <TrackCard {...track} />
+          <Box borderRadius="2xl" bg={themeTokens.surfaceCard} border={`1px solid ${themeTokens.borderSubtle}`} p={5} boxShadow="lg">
+            <Text fontWeight="semibold" color={themeTokens.textPrimary}>
+              Insight de detecção
+            </Text>
+            <Text color={themeTokens.textMuted} mt={2}>
+              Trilha encontrada em 78% das gravações com alto grau de confiança. Verifique política antes de reutilizar.
+            </Text>
+          </Box>
+        </SimpleGrid>
       </Box>
     </>
   );

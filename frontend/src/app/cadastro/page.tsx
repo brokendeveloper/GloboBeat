@@ -5,7 +5,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { Box, Button, Input, Text, VStack, Flex, Checkbox } from "@chakra-ui/react"
-import {Field} from '@/components/ui/field'
+import { Field } from "@/components/ui/field"
+import { themeTokens } from "@/constants/theme"
 
 export default function CadastroPage() {
   const [nome, setNome] = useState("")
@@ -31,7 +32,7 @@ export default function CadastroPage() {
   }
 
   return (
-    <div className="min-h-screen m-0 p-0 bg-gradient-to-b from-[#055371] to-[#001821] bg-fixed text-foreground">
+    <div className="min-h-screen m-0 p-0 bg-gradient-to-b from-[var(--brand-primary)] to-[var(--brand-primary-strong)] bg-fixed text-foreground">
       <Flex direction="column" minH="100vh">
         <Box as="header" w="full" px={8} py={6}>
           <Flex align="center" justify="space-between">
@@ -41,7 +42,13 @@ export default function CadastroPage() {
             </Flex>
             <Flex flex={1} justify="flex-end" gap={3}>
               <Link href="/login">
-                <Button bg="white" color="#055371" borderRadius="full" fontWeight="medium" _hover={{ bg: "gray.100" }}>
+                <Button
+                  bg={themeTokens.surfaceCard}
+                  color="var(--brand-primary)"
+                  borderRadius="full"
+                  fontWeight="medium"
+                  _hover={{ bg: themeTokens.surfaceMuted }}
+                >
                   Entrar
                 </Button>
               </Link>
@@ -76,8 +83,8 @@ export default function CadastroPage() {
                     type="text"
                     value={nome}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNome(e.target.value)}
-                    bg="whiteAlpha.900"
-                    color="gray.800"
+                    bg={themeTokens.surfaceCard}
+                    color={themeTokens.textPrimary}
                     borderRadius="lg"
                     size="lg"
                     required
@@ -90,8 +97,8 @@ export default function CadastroPage() {
                     type="email"
                     value={email}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                    bg="whiteAlpha.900"
-                    color="gray.800"
+                    bg={themeTokens.surfaceCard}
+                    color={themeTokens.textPrimary}
                     borderRadius="lg"
                     size="lg"
                     required
@@ -104,8 +111,8 @@ export default function CadastroPage() {
                     type="password"
                     value={senha}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSenha(e.target.value)}
-                    bg="whiteAlpha.900"
-                    color="gray.800"
+                    bg={themeTokens.surfaceCard}
+                    color={themeTokens.textPrimary}
                     borderRadius="lg"
                     size="lg"
                     required
@@ -118,8 +125,8 @@ export default function CadastroPage() {
                     type="password"
                     value={confirmarSenha}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmarSenha(e.target.value)}
-                    bg="whiteAlpha.900"
-                    color="gray.800"
+                    bg={themeTokens.surfaceCard}
+                    color={themeTokens.textPrimary}
                     borderRadius="lg"
                     size="lg"
                     required
@@ -146,13 +153,13 @@ export default function CadastroPage() {
                 <Flex justify="center" pt={4}>
                   <Button
                     type="submit"
-                    bg="#055371"
+                    bg="var(--brand-primary)"
                     color="white"
                     px={12}
                     py={6}
                     borderRadius="lg"
                     fontWeight="semibold"
-                    _hover={{ bg: "#044560" }}
+                    _hover={{ bg: "var(--brand-primary-strong)" }}
                   >
                     Cadastrar
                   </Button>

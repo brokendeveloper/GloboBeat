@@ -1,18 +1,21 @@
 "use client";
 
-import { Box, Button, Flex, Heading, Text, VStack } from "@chakra-ui/react";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { use } from "react";
-
-interface Track {
-  nome: string;
-  album: string;
-  banda: string;
-  timestamp: string;
-  politica: string;
-  gMusicID: string;
-}
+import TrackCard, { type Track } from "@/components/CardTrilha";
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Text,
+  VStack,
+  SimpleGrid,
+  Textarea,
+} from "@chakra-ui/react";
+import { use, useState } from "react";
+import { BackLink } from "@/components/back-link";
+import { themeTokens } from "@/constants/theme";
+import { ReportagemVideoPanel } from "@/components/reportagem-video-panel";
+import { getReportagemVideo } from "@/constants/media";
 
 interface ReportagemDetalhes {
   id: string;
@@ -74,102 +77,150 @@ const mockReportagens: Record<string, ReportagemDetalhes> = {
   },
 };
 
-function TrackCard(props: Track) {
-  return (
-    <Box bg="#055371" p={5} rounded="md" color="white" w="full">
-      <VStack align="stretch" gap={2}>
-        <Text>
-          <strong>Nome:</strong> {props.nome}
-        </Text>
-        <Text>
-          <strong>Álbum:</strong> {props.album}
-        </Text>
-        <Text>
-          <strong>Banda:</strong> {props.banda}
-        </Text>
-        <Text>
-          <strong>Timestamp:</strong> {props.timestamp}
-        </Text>
-        <Text>
-          <strong>Política:</strong> {props.politica}
-        </Text>
-        <Text>
-          <strong>G music ID:</strong> {props.gMusicID}
-        </Text>
-      </VStack>
-    </Box>
-  );
-}
-
 export default function ReportagemDetalhesPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // In a real app, you would fetch the data based on params.id
   const { id } = use(params);
   const reportagem = mockReportagens[id] || mockReportagens["1"];
+  const [resumo, setResumo] = useState(
+    "Trilha validada sem restrições. Disponível para uso editorial."
+  );
+  const video = getReportagemVideo(reportagem.id);
 
   const getStatusColor = () => {
-    return reportagem.status === "Validação Confirmada" ? "#00C853" : "#FF1744";
+    return reportagem.status === "Validação Confirmada"
+      ? themeTokens.statusSuccess
+      : themeTokens.statusError;
   };
 
   return (
     <>
-      <Box as="main" flex={1} bg="white" p={8} px={32}>
+      <Box as="main" flex={1} bg={themeTokens.surfaceBg} p={8} px={32}>
         <Flex align="center" justify="space-between" mb={8}>
-          <Link href="/historico">
-            <Flex
-              align="center"
-              gap={3}
-              color="#055371"
-              fontWeight="semibold"
-              cursor="pointer"
-              _hover={{ color: "#033a4f" }}
-            >
-              <Flex
-                align="center"
-                justify="center"
-                w="32px"
-                h="32px"
-                bg="#055371"
-                borderRadius="full"
-              >
-                <ArrowLeft size={18} color="white" />
-              </Flex>
-              Voltar
-            </Flex>
-          </Link>
+          <BackLink href="/historico" />
 
-          <Heading as="h1" size="lg" color="#055371" fontWeight="bold">
-            {reportagem.data} - {reportagem.reportagem}
-          </Heading>
-
-          <Flex direction="column" gap={4} align="center">
-            <Text fontSize="lg" fontWeight="bold" color="#055371">
-              Status: <Text as="span" color={getStatusColor()}>{reportagem.status}</Text>
+          <Box textAlign="center" flex={1}>
+            <Text fontSize="sm" color={themeTokens.textMuted}>
+              Registro completo
             </Text>
+            <Heading as="h1" size="lg" color={themeTokens.textPrimary} fontWeight="bold">
+              {reportagem.reportagem}
+            </Heading>
+            <Text color={themeTokens.textMuted}>{reportagem.data}</Text>
+          </Box>
 
+          <Flex direction="column" gap={3} align="flex-end">
+            <Box
+              px={4}
+              py={1}
+              borderRadius="full"
+              border={`1px solid ${getStatusColor()}`}
+              color={getStatusColor()}
+              fontWeight="bold"
+            >
+              {reportagem.status}
+            </Box>
             <Button
               borderRadius="lg"
-              bg="#055371"
-              color="white"
-              px={8}
-              py={6}
-              fontSize="lg"
+              bg={themeTokens.brandPrimary}
+              color={themeTokens.brandOnPrimary}
+              px={6}
+              py={4}
+              fontSize="md"
               fontWeight="bold"
-              _hover={{ bg: "#066d95" }}
+              _hover={{ bg: themeTokens.brandPrimaryStrong }}
             >
-              Gerar PDF
+              Baixar PDF
             </Button>
           </Flex>
         </Flex>
 
-        <VStack gap={4} maxW="700px" mx="auto">
-          {reportagem.tracks.map((track, index) => (
-            <TrackCard key={index} {...track} />
-          ))}
+        <Box maxW="1100px" mx="auto" mb={8}>
+          <ReportagemVideoPanel
+            title="Trecho exibido ao vivo"
+            video={video}
+            metadata={[
+              { label: "Reportagem", value: reportagem.reportagem },
+              { label: "Status", value: reportagem.status },
+              {
+                label: "Timestamp",
+                value: reportagem.tracks[0]?.timestamp ?? "—",
+              },
+            ]}
+          />
+        </Box>
+
+        <VStack align="stretch" gap={3} maxW="900px" mx="auto" mb={4}>
+          <Flex align="center" justify="space-between">
+            <Heading size="md" color={themeTokens.textPrimary}>
+              Trilhas reconhecidas
+            </Heading>
+            <Text fontSize="sm" color={themeTokens.textMuted}>
+              {reportagem.tracks.length} registros
+            </Text>
+          </Flex>
+          <Text fontSize="sm" color={themeTokens.textMuted}>
+            Confira abaixo todos os trechos musicais reconhecidos nesta reportagem,
+            com políticas e timestamps para rápida reconsulta.
+          </Text>
         </VStack>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} maxW="900px" mx="auto">
+          {reportagem.tracks.map((track, index) => (
+            <Box key={`${track.gMusicID}-${index}`} position="relative">
+              <Box
+                position="absolute"
+                top={-3}
+                left={-3}
+                px={3}
+                py={1}
+                borderRadius="full"
+                bg={themeTokens.panelGradient}
+                color={themeTokens.textPrimary}
+                fontSize="xs"
+                fontWeight="bold"
+                boxShadow="0 6px 18px rgba(0,0,0,0.12)"
+              >
+                #{index + 1}
+              </Box>
+              <TrackCard {...track} />
+            </Box>
+          ))}
+        </SimpleGrid>
+
+        <Flex direction={{ base: "column", lg: "row" }} gap={6} mt={10}>
+          <Box flex={2} bg={themeTokens.surfaceCard} borderRadius="xl" p={5} border={`1px solid ${themeTokens.borderSubtle}`}>
+            <Text fontWeight="semibold" color={themeTokens.textPrimary}>
+              Notas da auditoria
+            </Text>
+            <Textarea
+              mt={3}
+              value={resumo}
+              onChange={(e) => setResumo(e.target.value)}
+              bg={themeTokens.surfaceMuted}
+              borderColor={themeTokens.borderSubtle}
+              minH="140px"
+            />
+          </Box>
+          <Box flex={1} bg={themeTokens.surfaceCard} borderRadius="xl" p={5} border={`1px solid ${themeTokens.borderSubtle}`}>
+            <Text fontWeight="semibold" color={themeTokens.textPrimary}>
+              Próximos passos
+            </Text>
+            <VStack align="stretch" gap={3} mt={3}>
+              <Button variant="ghost" justifyContent="flex-start" color={themeTokens.statusSuccess}>
+                Disponibilizar para reprise
+              </Button>
+              <Button variant="ghost" justifyContent="flex-start" color={themeTokens.textPrimary}>
+                Notificar equipe de trilhas
+              </Button>
+              <Button variant="ghost" justifyContent="flex-start" color={themeTokens.statusWarning}>
+                Monitorar possíveis strikes
+              </Button>
+            </VStack>
+          </Box>
+        </Flex>
       </Box>
     </>
   );
