@@ -1,183 +1,156 @@
-"use client"
+"use client";
 
-import type React from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { useState } from "react"
-import { Box, Button, Input, Text, VStack, Flex, Checkbox } from "@chakra-ui/react"
-import { Field } from "@/components/ui/field"
-import { themeTokens } from "@/constants/theme"
+import type React from "react";
+import { useState } from "react";
+import {
+  Box,
+  Button,
+  Input,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
+import { AuthLayout } from "@/components/auth-layout";
+import { StatusMessage } from "@/components/status-message";
 
 export default function CadastroPage() {
-  const [nome, setNome] = useState("")
-  const [email, setEmail] = useState("")
-  const [senha, setSenha] = useState("")
-  const [confirmarSenha, setConfirmarSenha] = useState("")
-  const [aceitouTermos, setAceitouTermos] = useState(false)
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
+    e.preventDefault();
     if (senha !== confirmarSenha) {
-      alert("As senhas não coincidem!")
-      return
+      setStatus("error");
+      setMessage("As senhas precisam ser idênticas para liberar o acesso.");
+      return;
     }
-
     if (!aceitouTermos) {
-      alert("Você precisa aceitar os termos de uso!")
-      return
+      setStatus("error");
+      setMessage("É necessário aceitar os termos de uso da Globo.");
+      return;
     }
 
-    console.log("Cadastro:", { nome, email, senha })
-  }
+    setStatus("success");
+    setMessage("Solicitação enviada ao time de segurança. Responderemos em até 24h.");
+  };
 
   return (
-    <div className="min-h-screen m-0 p-0 bg-gradient-to-b from-[var(--brand-primary)] to-[var(--brand-primary-strong)] bg-fixed text-foreground">
-      <Flex direction="column" minH="100vh">
-        <Box as="header" w="full" px={8} py={6}>
-          <Flex align="center" justify="space-between">
-            <Box flex={1} />
-            <Flex flex={1} justify="center">
-              <Image src="/logo.png" alt="Logo" width={60} height={60} style={{ objectFit: "contain" }} />
-            </Flex>
-            <Flex flex={1} justify="flex-end" gap={3}>
-              <Link href="/login">
-                <Button
-                  bg={themeTokens.surfaceCard}
-                  color="var(--brand-primary)"
-                  borderRadius="full"
-                  fontWeight="medium"
-                  _hover={{ bg: themeTokens.surfaceMuted }}
-                >
-                  Entrar
-                </Button>
-              </Link>
-              <Link href="/cadastro">
-                <Button variant="ghost" color="white" fontWeight="medium" _hover={{ opacity: 0.8 }}>
-                  Registre-se
-                </Button>
-              </Link>
-            </Flex>
-          </Flex>
-        </Box>
-
-        <Flex as="main" flex={1} align="center" justify="center" px={4} py={8}>
-          <Box
-            w="full"
-            maxW="md"
-            bg="whiteAlpha.200"
-            backdropFilter="blur(8px)"
-            border="2px solid"
-            borderColor="whiteAlpha.300"
-            borderRadius="2xl"
-            p={8}
-          >
-            <Text fontSize="4xl" fontWeight="bold" color="white" textAlign="center" mb={8}>
-              Cadastro
+    <AuthLayout
+      title="Solicitar acesso"
+      subtitle="Cadastre-se para habilitar o monitoramento de trilhas no seu núcleo."
+      switchAccount={{
+        question: "Já possui credenciais?",
+        actionLabel: "Fazer login",
+        href: "/login",
+      }}
+      highlight={{
+        eyebrow: "credenciamento interno",
+        headline: "Uso exclusivo para redações Globo",
+        description:
+          "O cadastro passa por aprovação do time de Rights & Clearance garantindo segurança e governança.",
+        stats: [
+          { label: "Editorias integradas", value: "12" },
+          { label: "Usuários ativos", value: "350+" },
+        ],
+      }}
+      footerNote={
+        <Text fontSize="sm">
+          Dúvidas? Procure a equipe de Segurança de Conteúdo ou acesse a Central de Suporte.
+        </Text>
+      }
+    >
+      <form onSubmit={handleSubmit}>
+        <Stack spacing={5}>
+          <Box>
+            <Text fontWeight="medium" mb={2}>
+              Nome completo
             </Text>
-
-            <form onSubmit={handleSubmit}>
-              <VStack gap={5} align="stretch">
-                <Field label="Nome:" color="white">
-                  <Input
-                    type="text"
-                    value={nome}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNome(e.target.value)}
-                    bg={themeTokens.surfaceCard}
-                    color={themeTokens.textPrimary}
-                    borderRadius="lg"
-                    size="lg"
-                    required
-                    _focus={{ ring: 2, ringColor: "whiteAlpha.500" }}
-                  />
-                </Field>
-
-                <Field label="Email:" color="white">
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                    bg={themeTokens.surfaceCard}
-                    color={themeTokens.textPrimary}
-                    borderRadius="lg"
-                    size="lg"
-                    required
-                    _focus={{ ring: 2, ringColor: "whiteAlpha.500" }}
-                  />
-                </Field>
-
-                <Field label="Senha:" color="white">
-                  <Input
-                    type="password"
-                    value={senha}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSenha(e.target.value)}
-                    bg={themeTokens.surfaceCard}
-                    color={themeTokens.textPrimary}
-                    borderRadius="lg"
-                    size="lg"
-                    required
-                    _focus={{ ring: 2, ringColor: "whiteAlpha.500" }}
-                  />
-                </Field>
-
-                <Field label="Confirmar senha:" color="white">
-                  <Input
-                    type="password"
-                    value={confirmarSenha}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmarSenha(e.target.value)}
-                    bg={themeTokens.surfaceCard}
-                    color={themeTokens.textPrimary}
-                    borderRadius="lg"
-                    size="lg"
-                    required
-                    _focus={{ ring: 2, ringColor: "whiteAlpha.500" }}
-                  />
-                </Field>
-
-                <Flex align="center" gap={2} pt={2}>
-                  <Checkbox.Root
-                    checked={aceitouTermos}
-                    onCheckedChange={(details) => setAceitouTermos(details.checked as boolean)}
-                    colorPalette="teal"
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control>
-                      <Checkbox.Indicator />
-                    </Checkbox.Control>
-                    <Checkbox.Label color="white" fontSize="sm">
-                      Confirmar termos de uso.
-                    </Checkbox.Label>
-                  </Checkbox.Root>
-                </Flex>
-
-                <Flex justify="center" pt={4}>
-                  <Button
-                    type="submit"
-                    bg="var(--brand-primary)"
-                    color="white"
-                    px={12}
-                    py={6}
-                    borderRadius="lg"
-                    fontWeight="semibold"
-                    _hover={{ bg: "var(--brand-primary-strong)" }}
-                  >
-                    Cadastrar
-                  </Button>
-                </Flex>
-              </VStack>
-            </form>
+            <Input
+              value={nome}
+              onChange={(event) => setNome(event.target.value)}
+              placeholder="Nome e sobrenome"
+              size="lg"
+              borderRadius="xl"
+              required
+            />
           </Box>
-        </Flex>
 
-        <Box as="footer" w="full" py={8}>
-          <Flex justify="center">
-            <Text fontSize="4xl" fontWeight="bold" color="white" letterSpacing="wider">
-              GLOBOBEAT
+          <Box>
+            <Text fontWeight="medium" mb={2}>
+              E-mail corporativo
             </Text>
-          </Flex>
-        </Box>
-      </Flex>
-    </div>
+            <Input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="nome.sobrenome@globo.com"
+              size="lg"
+              borderRadius="xl"
+              required
+            />
+          </Box>
 
-  )
+          <Stack direction={{ base: "column", md: "row" }} spacing={4}>
+            <Box flex="1">
+              <Text fontWeight="medium" mb={2}>
+                Senha
+              </Text>
+              <Input
+                type="password"
+                value={senha}
+                onChange={(event) => setSenha(event.target.value)}
+                size="lg"
+                borderRadius="xl"
+                required
+              />
+            </Box>
+            <Box flex="1">
+              <Text fontWeight="medium" mb={2}>
+                Confirmar senha
+              </Text>
+              <Input
+                type="password"
+                value={confirmarSenha}
+                onChange={(event) => setConfirmarSenha(event.target.value)}
+                size="lg"
+                borderRadius="xl"
+                required
+              />
+            </Box>
+          </Stack>
+
+          <label style={{ display: "flex", gap: "0.6rem", alignItems: "flex-start", fontSize: "0.95rem" }}>
+            <input
+              type="checkbox"
+              checked={aceitouTermos}
+              onChange={(event) => setAceitouTermos(event.target.checked)}
+              style={{
+                width: "18px",
+                height: "18px",
+                marginTop: "4px",
+              }}
+            />
+            <span>Declaro que li e concordo com os termos internos de confidencialidade.</span>
+          </label>
+
+          <StatusMessage status={status} message={message} />
+
+          <Button
+            type="submit"
+            size="lg"
+            borderRadius="xl"
+            bg="var(--brand-primary)"
+            color="white"
+            _hover={{ bg: "var(--brand-primary-strong)" }}
+          >
+            Enviar solicitação
+          </Button>
+        </Stack>
+      </form>
+    </AuthLayout>
+  );
 }
