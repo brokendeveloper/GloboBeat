@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { 
   CloudUpload, 
   Upload, 
@@ -14,13 +15,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { uploadFile, type UploadResponse } from "@/lib/api"
 
 export default function UploadPage() {
+  const router = useRouter()
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadMessage, setUploadMessage] = useState('')
+  const [lastUploadId, setLastUploadId] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -57,41 +61,33 @@ export default function UploadPage() {
     setUploadStatus('uploading')
     setUploadProgress(0)
 
-    const formData = new FormData()
-    formData.append('file', selectedFiles[0])
-
     try {
-      const xhr = new XMLHttpRequest()
+      const response = await uploadFile(selectedFiles[0], (progress) => {
+        setUploadProgress(progress)
+      })
+
+      setUploadStatus('success')
+      setLastUploadId(response.upload.id)
       
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100)
-          setUploadProgress(percent)
-        }
-      })
-
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setUploadStatus('success')
-          setUploadMessage('Arquivo enviado! Iniciando identificação de trilhas...')
-          setSelectedFiles(null)
-          if (fileInputRef.current) fileInputRef.current.value = ''
-        } else {
-          setUploadStatus('error')
-          setUploadMessage('Erro ao enviar arquivo. Tente novamente.')
-        }
-      })
-
-      xhr.addEventListener('error', () => {
-        setUploadStatus('error')
-        setUploadMessage('Erro de conexão. Verifique sua internet.')
-      })
-
-      xhr.open('POST', 'http://localhost:3000/api/upload')
-      xhr.send(formData)
-    } catch {
+      if (response.job) {
+        setUploadMessage(`Arquivo enviado! Job ${response.job.id.slice(0, 8)}... criado. Identificando trilhas...`)
+      } else {
+        setUploadMessage('Arquivo enviado com sucesso!')
+      }
+      
+      setSelectedFiles(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch (error) {
       setUploadStatus('error')
-      setUploadMessage('Erro inesperado. Tente novamente.')
+      setUploadMessage(error instanceof Error ? error.message : 'Erro ao enviar arquivo. Tente novamente.')
+    }
+  }
+
+  const handleViewResults = () => {
+    if (lastUploadId) {
+      router.push(`/trilhas?uploadId=${lastUploadId}`)
+    } else {
+      router.push('/trilhas')
     }
   }
 
@@ -206,6 +202,13 @@ export default function UploadPage() {
                   <CheckCircle className="w-4 h-4 text-green-600" />
                   <AlertTitle className="text-green-800">Upload concluído!</AlertTitle>
                   <AlertDescription className="text-green-700">{uploadMessage}</AlertDescription>
+                  <Button 
+                    onClick={handleViewResults} 
+                    className="mt-3 bg-green-600 hover:bg-green-700 text-white"
+                    size="sm"
+                  >
+                    Ver Trilhas Identificadas
+                  </Button>
                 </Alert>
               )}
 
