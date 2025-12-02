@@ -1,16 +1,34 @@
-import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
+import { Outfit, DM_Serif_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import { Provider } from "@/components/ui/provider"
 import "./globals.css"
-import { Suspense } from "react"
+
+// Body font - Modern, geometric, distinctive
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
+})
+
+// Display font - Elegant serif for headings
+const dmSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["400"],
+  style: ["normal", "italic"],
+})
 
 export const metadata: Metadata = {
-  title: "GloboBeat",
-  description: "Sistema de autenticação GloboBeat",
-  generator: "v0.app",
+  title: "GloboBeat | Identificação de Trilhas Sonoras",
+  description: "Sistema de identificação automática de trilhas sonoras em conteúdos jornalísticos - Porto Digital & Globo",
+  keywords: ["trilhas sonoras", "identificação musical", "direitos autorais", "Globo", "jornalismo"],
+  authors: [{ name: "Porto Digital" }],
+}
+
+export const viewport = {
+  themeColor: "#1a2744",
 }
 
 export default function RootLayout({
@@ -20,10 +38,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={<div>Loading...</div>}>
-          <Provider>{children}</Provider>
-        </Suspense>
+      <body className={`${outfit.variable} ${dmSerif.variable} font-sans antialiased`}>
+        {children}
         <Analytics />
       </body>
     </html>

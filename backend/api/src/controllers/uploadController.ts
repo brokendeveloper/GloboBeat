@@ -1,5 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import uploadService from '../services/uploadService.js';
+import jobService from '../services/jobService.js';
+import queueService from '../services/queueService.js';
 
 class UploadController {
   /**
@@ -22,6 +24,18 @@ class UploadController {
       // Process upload (S3 + DB)
       const uploadRecord = await uploadService.processFileUpload(req.file, userId);
 
+      // Create a job for processing
+      let job = null;
+      try {
+        job = await jobService.createJob(uploadRecord.id);
+        // Publish job to queue for worker processing
+        await queueService.publishJob(job.id, uploadRecord.s3_key);
+        // Update upload status to processing
+        await uploadService.updateUploadStatus(uploadRecord.id, 'processing');
+      } catch (jobError) {
+        console.warn('Could not create job (queue may be unavailable):', jobError);
+      }
+
       res.status(201).json({
         success: true,
         message: 'File uploaded successfully',
@@ -30,9 +44,10 @@ class UploadController {
           filename: uploadRecord.original_filename,
           s3Key: uploadRecord.s3_key,
           size: uploadRecord.file_size,
-          status: uploadRecord.status,
+          status: job ? 'processing' : uploadRecord.status,
           uploadedAt: uploadRecord.created_at
-        }
+        },
+        job: job ? { id: job.id, status: job.status } : null
       });
     } catch (error) {
       next(error);
