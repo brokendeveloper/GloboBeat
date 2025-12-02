@@ -21,12 +21,17 @@ The backend uses Docker Compose to orchestrate multiple services:
   - Layered architecture: routes → controllers → services → database
   - Auto-running migrations on startup
 
-- **worker-pre** (`backend/workers/worker-pre/`): Python preprocessing worker for audio data (planned)
-- **worker-rec** (`backend/workers/worker-rec/`): Python recognition/identification worker (planned)
-- **Database**: PostgreSQL 16 (container: `trilhas_db`, port 5432)
+- **worker-audio** (`backend/workers/`): Python 3.10 worker for audio recognition using:
+  - **ACRCloud**: Cloud-based music recognition API
+  - **AcoustID**: Chromaprint-based fingerprinting service
+  - **Audfprint**: Local audio fingerprinting against Globo's music database
+  - Scans audio files in configurable intervals (default: 20s segments, 15s duration)
+  - Generates unique keys for identified tracks (artist_title format)
+  - Container has access to local music database (`trilhas_globo/`) and test files
+- **Database**: PostgreSQL 16 (container: `trilhas_db`, port 5435 exposed, 5432 internal)
 - **Message Queue**: RabbitMQ 3 with management UI (container: `trilhas_rabbitmq`, ports 5672, 15672)
 
-Workers will communicate via RabbitMQ and connect to the shared PostgreSQL database. All services are defined in `backend/infra/docker-compose.yml`.
+Workers communicate via RabbitMQ and connect to the shared PostgreSQL database. All services are defined in `backend/infra/docker-compose.yml`.
 
 ### Frontend
 
@@ -152,17 +157,24 @@ AWS_SECRET_ACCESS_KEY=your_secret_key_here
 AWS_REGION=us-east-1
 S3_BUCKET_NAME=globobeat-uploads
 
-# RabbitMQ (for future worker integration)
+# RabbitMQ
 RABBITMQ_HOST=rabbitmq
 RABBITMQ_PORT=5672
 RABBITMQ_USER=admin
 RABBITMQ_PASSWORD=admin123
+
+# Audio Recognition Services (for worker-audio)
+ACRCLOUD_HOST=identify-us-west-2.acrcloud.com
+ACRCLOUD_ACCESS_KEY=your_acrcloud_key
+ACRCLOUD_ACCESS_SECRET=your_acrcloud_secret
+ACOUSTID_API_KEY=your_acoustid_key
 ```
 
 **Setup:**
 1. Copy `backend/infra/.env.example` to `backend/infra/.env`
-2. Replace AWS credentials with your actual values
-3. Ensure S3 bucket exists and has proper IAM permissions
+2. Replace AWS S3 credentials with your actual values
+3. Add ACRCloud and AcoustID API credentials (required for audio recognition)
+4. Ensure S3 bucket exists and has proper IAM permissions
 
 ## Key Technical Details
 
@@ -202,7 +214,7 @@ RABBITMQ_PASSWORD=admin123
 
 - **Frontend dev server**: 3001 (Next.js)
 - **API service**: 3000 (Express)
-- **PostgreSQL**: 5432
+- **PostgreSQL**: 5435 (host) → 5432 (container)
 - **RabbitMQ AMQP**: 5672
 - **RabbitMQ Management UI**: 15672
 

@@ -1,16 +1,23 @@
-import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
+import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import { Provider } from "@/components/ui/provider"
 import "./globals.css"
-import { Suspense } from "react"
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+})
 
 export const metadata: Metadata = {
-  title: "GloboBeat",
-  description: "Sistema de autenticação GloboBeat",
-  generator: "v0.app",
+  title: "GloboBeat | Identificação de Trilhas Sonoras",
+  description: "Sistema de identificação automática de trilhas sonoras em conteúdos jornalísticos - Porto Digital & Globo",
+  keywords: ["trilhas sonoras", "identificação musical", "direitos autorais", "Globo", "jornalismo"],
+  authors: [{ name: "Porto Digital" }],
+}
+
+export const viewport = {
+  themeColor: "#ffffff",
 }
 
 export default function RootLayout({
@@ -20,10 +27,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={<div>Loading...</div>}>
-          <Provider>{children}</Provider>
-        </Suspense>
+      <body className={`${inter.variable} font-sans`}>
+        {children}
         <Analytics />
       </body>
     </html>
