@@ -20,6 +20,6 @@ CREATE TABLE IF NOT EXISTS music_detections (
 );
 
 -- Create indexes for common queries
-CREATE INDEX idx_music_detections_job_id ON music_detections(job_id);
-CREATE INDEX idx_music_detections_upload_id ON music_detections(upload_id);
-CREATE INDEX idx_music_detections_validated ON music_detections(validated);
+CREATE INDEX IF NOT EXISTS idx_music_detections_job_id ON music_detections(job_id);
+CREATE INDEX IF NOT EXISTS idx_music_detections_upload_id ON music_detections(upload_id);
+CREATE INDEX IF NOT EXISTS idx_music_detections_validated ON music_detections(validated);

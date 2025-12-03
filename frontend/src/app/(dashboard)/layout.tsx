@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { 
   Music, 
   CloudUpload, 
   Sparkles, 
   History, 
-  Settings, 
   LogOut 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,6 +23,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = () => {
+    // TODO: Clear auth tokens when auth is implemented
+    // localStorage.removeItem('token')
+    router.push('/login')
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -60,12 +66,12 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/10 space-y-1">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-slate-400 hover:text-white hover:bg-white/5">
-            <Settings className="w-5 h-5" />
-            Configurações
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-red-400 hover:text-red-300 hover:bg-white/5">
+        <div className="p-4 border-t border-white/10">
+          <Button 
+            variant="ghost" 
+            onClick={handleLogout}
+            className="w-full justify-start gap-3 text-red-400 hover:text-red-300 hover:bg-white/5"
+          >
             <LogOut className="w-5 h-5" />
             Sair
           </Button>

@@ -11,11 +11,19 @@ import {
   Music2,
   Clock,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  FileAudio
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { getDetectionsByUpload, getUploads, type MusicDetection, type DetectionStats, type Upload } from "@/lib/api"
 
 export default function TrilhasPage() {
@@ -38,30 +46,38 @@ export default function TrilhasPage() {
     setError(null)
     
     try {
+      // Always load list of uploads
+      const uploadsList = await getUploads(50, 0)
+      setUploads(uploadsList)
+      
       // If we have a specific upload, load its detections
       if (selectedUploadId) {
         const result = await getDetectionsByUpload(selectedUploadId)
         setDetections(result.detections)
         setStats(result.stats)
-      } else {
-        // Load list of uploads to let user pick one
-        const uploadsList = await getUploads(20, 0)
-        setUploads(uploadsList)
-        
-        // If there are uploads, auto-select the most recent one
-        if (uploadsList.length > 0) {
-          const mostRecent = uploadsList[0]
-          setSelectedUploadId(mostRecent.id)
-          const result = await getDetectionsByUpload(mostRecent.id)
-          setDetections(result.detections)
-          setStats(result.stats)
-        }
+      } else if (uploadsList.length > 0) {
+        // Auto-select the most recent one if none selected
+        const mostRecent = uploadsList[0]
+        setSelectedUploadId(mostRecent.id)
+        const result = await getDetectionsByUpload(mostRecent.id)
+        setDetections(result.detections)
+        setStats(result.stats)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSelectUpload = async (uploadId: number) => {
+    setSelectedUploadId(uploadId)
+  }
+
+  const getSelectedUploadName = () => {
+    const upload = uploads.find(u => u.id === selectedUploadId)
+    if (!upload) return 'Selecionar upload'
+    return upload.original_filename || upload.filename || `Upload #${upload.id}`
   }
 
   const getPolicyBadge = (policy: string | null) => {
@@ -91,6 +107,38 @@ export default function TrilhasPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Upload Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="max-w-[200px]">
+                <FileAudio className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">{getSelectedUploadName()}</span>
+                <ChevronDown className="w-4 h-4 ml-2 flex-shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-[300px] overflow-auto w-[280px] bg-white border shadow-lg">
+              {uploads.map((upload) => (
+                <DropdownMenuItem 
+                  key={upload.id}
+                  onClick={() => handleSelectUpload(upload.id)}
+                  className={selectedUploadId === upload.id ? 'bg-blue-50' : ''}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium truncate">
+                      {upload.original_filename || upload.filename || `Upload #${upload.id}`}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {new Date(upload.created_at).toLocaleDateString('pt-BR')} • ID: {upload.id}
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+              {uploads.length === 0 && (
+                <DropdownMenuItem disabled>Nenhum upload encontrado</DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Button variant="outline" size="sm">
             <Filter className="w-4 h-4 mr-2" />
             Filtrar
@@ -170,38 +218,40 @@ export default function TrilhasPage() {
               {/* Track Cards */}
               <div className="space-y-4">
                 {detections.map((detection) => (
-                  <Card key={detection.id} className="shadow-md border-0 hover:shadow-lg transition-shadow">
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-4">
-                          <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center shadow-md">
-                            <Music2 className="w-7 h-7 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-lg">{detection.title || 'Título desconhecido'}</h3>
-                            <p className="text-slate-500">
-                              {detection.artist || 'Artista desconhecido'} • {detection.album || 'Álbum desconhecido'}
-                            </p>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
-                              {detection.timestamp_start && (
-                                <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded">
-                                  <Clock className="w-3 h-3" />
-                                  {detection.timestamp_start} - {detection.timestamp_end || '?'}
-                                </span>
-                              )}
-                              {detection.gmusic_id && (
-                                <span className="font-mono bg-slate-100 px-2 py-1 rounded">{detection.gmusic_id}</span>
-                              )}
-                              {detection.fonte && (
-                                <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded">{detection.fonte}</span>
-                              )}
+                  <Link key={detection.id} href={`/trilhas/${detection.id}`}>
+                    <Card className="shadow-md hover:shadow-lg transition-shadow cursor-pointer hover:border-blue-200 border border-transparent">
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-4">
+                            <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center shadow-md">
+                              <Music2 className="w-7 h-7 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg">{detection.title || 'Título desconhecido'}</h3>
+                              <p className="text-slate-500">
+                                {detection.artist || 'Artista desconhecido'} • {detection.album || 'Álbum desconhecido'}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
+                                {detection.timestamp_start && (
+                                  <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded">
+                                    <Clock className="w-3 h-3" />
+                                    {detection.timestamp_start} - {detection.timestamp_end || '?'}
+                                  </span>
+                                )}
+                                {detection.gmusic_id && (
+                                  <span className="font-mono bg-slate-100 px-2 py-1 rounded">{detection.gmusic_id}</span>
+                                )}
+                                {detection.fonte && (
+                                  <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded">{detection.fonte}</span>
+                                )}
+                              </div>
                             </div>
                           </div>
+                          {getPolicyBadge(detection.policy)}
                         </div>
-                        {getPolicyBadge(detection.policy)}
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
 

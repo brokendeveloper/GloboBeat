@@ -9,22 +9,25 @@ import {
   FileVideo, 
   Sparkles,
   CheckCircle,
-  XCircle
+  XCircle,
+  ArrowRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { uploadFile, type UploadResponse } from "@/lib/api"
+import { uploadFile, waitForJobCompletion, type UploadResponse, type JobStatus } from "@/lib/api"
 
 export default function UploadPage() {
   const router = useRouter()
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'success' | 'error'>('idle')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadMessage, setUploadMessage] = useState('')
   const [lastUploadId, setLastUploadId] = useState<number | null>(null)
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
+  const [detectionsCount, setDetectionsCount] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -60,23 +63,52 @@ export default function UploadPage() {
 
     setUploadStatus('uploading')
     setUploadProgress(0)
+    setJobStatus(null)
+    setDetectionsCount(0)
 
     try {
       const response = await uploadFile(selectedFiles[0], (progress) => {
         setUploadProgress(progress)
       })
 
-      setUploadStatus('success')
       setLastUploadId(response.upload.id)
-      
-      if (response.job) {
-        setUploadMessage(`Arquivo enviado! Job ${response.job.id.slice(0, 8)}... criado. Identificando trilhas...`)
-      } else {
-        setUploadMessage('Arquivo enviado com sucesso!')
-      }
-      
       setSelectedFiles(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
+      
+      if (response.job) {
+        // Start tracking job progress
+        setUploadStatus('processing')
+        setUploadMessage(`Processando... Job ${response.job.id.slice(0, 8)}...`)
+        
+        try {
+          const result = await waitForJobCompletion(
+            response.job.id,
+            (status) => {
+              setJobStatus(status)
+              setUploadMessage(`Status: ${status.status === 'processing' ? 'Identificando trilhas...' : status.status}`)
+            },
+            120, // max attempts (4 minutes)
+            2000 // 2 second intervals
+          )
+          
+          setDetectionsCount(result.detectionsCount)
+          
+          if (result.job.status === 'completed') {
+            setUploadStatus('success')
+            setUploadMessage(`✅ Concluído! ${result.detectionsCount} trilha(s) identificada(s).`)
+          } else {
+            setUploadStatus('error')
+            setUploadMessage('Processamento falhou. Tente novamente.')
+          }
+        } catch (jobError) {
+          // Job tracking failed, but upload succeeded
+          setUploadStatus('success')
+          setUploadMessage('Arquivo enviado! Verifique as trilhas identificadas.')
+        }
+      } else {
+        setUploadStatus('success')
+        setUploadMessage('Arquivo enviado com sucesso!')
+      }
     } catch (error) {
       setUploadStatus('error')
       setUploadMessage(error instanceof Error ? error.message : 'Erro ao enviar arquivo. Tente novamente.')
@@ -169,7 +201,7 @@ export default function UploadPage() {
               </div>
 
               {/* Selected File */}
-              {selectedFiles && selectedFiles.length > 0 && uploadStatus !== 'uploading' && (
+              {selectedFiles && selectedFiles.length > 0 && uploadStatus === 'idle' && (
                 <div className="flex items-center gap-4 p-5 rounded-xl bg-slate-50 border">
                   <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                     {getFileIcon(selectedFiles[0].type)}
@@ -185,30 +217,53 @@ export default function UploadPage() {
                 </div>
               )}
 
-              {/* Progress */}
+              {/* Upload Progress */}
               {uploadStatus === 'uploading' && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">Enviando...</span>
+                    <span className="text-slate-500">Enviando arquivo...</span>
                     <span className="font-medium text-blue-600">{uploadProgress}%</span>
                   </div>
                   <Progress value={uploadProgress} className="h-2" />
                 </div>
               )}
 
+              {/* Processing */}
+              {uploadStatus === 'processing' && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <div>
+                      <AlertTitle className="text-blue-800">Processando...</AlertTitle>
+                      <AlertDescription className="text-blue-700">{uploadMessage}</AlertDescription>
+                      {jobStatus && (
+                        <p className="text-xs text-blue-500 mt-1">
+                          Job: {jobStatus.id.slice(0, 8)}... | Status: {jobStatus.status}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Alert>
+              )}
+
               {/* Success */}
               {uploadStatus === 'success' && (
                 <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <AlertTitle className="text-green-800">Upload concluído!</AlertTitle>
-                  <AlertDescription className="text-green-700">{uploadMessage}</AlertDescription>
-                  <Button 
-                    onClick={handleViewResults} 
-                    className="mt-3 bg-green-600 hover:bg-green-700 text-white"
-                    size="sm"
-                  >
-                    Ver Trilhas Identificadas
-                  </Button>
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div className="ml-2">
+                    <AlertTitle className="text-green-800 font-semibold">Upload concluído!</AlertTitle>
+                    <AlertDescription className="text-green-700 mt-1">
+                      {uploadMessage}
+                    </AlertDescription>
+                    <Button 
+                      onClick={handleViewResults} 
+                      className="mt-4 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto font-medium"
+                      size="sm"
+                    >
+                      Ver Trilhas Identificadas
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
                 </Alert>
               )}
 

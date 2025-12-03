@@ -12,7 +12,8 @@ import {
   ChevronDown,
   Music2,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Eye
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -254,7 +255,17 @@ export default function ValidacaoPage() {
                             </div>
                           </div>
                         </div>
-                        {getPolicyBadge(detection.policy)}
+                        <div className="flex items-center gap-2">
+                          <Link 
+                            href={`/trilhas/${detection.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button variant="ghost" size="sm" className="text-slate-400 hover:text-blue-500">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                          {getPolicyBadge(detection.policy)}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

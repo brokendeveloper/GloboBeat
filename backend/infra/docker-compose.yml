@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # --- BANCO PRINCIPAL (Dados do App: Jobs, Users) ---
   db:

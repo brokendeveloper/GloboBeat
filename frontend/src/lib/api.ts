@@ -3,7 +3,7 @@
  * Handles all communication with the backend API
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
 
 // Types
 export interface Upload {
@@ -235,4 +235,74 @@ export async function checkHealth(): Promise<{ success: boolean; uptime: number 
   const response = await fetch(`${API_BASE_URL}/health`);
   const data = await response.json();
   return data;
+}
+
+// Job types and functions
+
+export interface JobStatus {
+  id: string;
+  upload_id: number | null;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobStatusResponse {
+  success: boolean;
+  job: JobStatus;
+  detectionsCount: number;
+}
+
+/**
+ * Get job status by job ID
+ */
+export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
+  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to fetch job status');
+  }
+  
+  return data;
+}
+
+/**
+ * Get job status by upload ID
+ */
+export async function getJobByUpload(uploadId: number): Promise<JobStatusResponse> {
+  const response = await fetch(`${API_BASE_URL}/uploads/${uploadId}/job`);
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to fetch job status');
+  }
+  
+  return data;
+}
+
+/**
+ * Poll for job completion
+ */
+export async function waitForJobCompletion(
+  jobId: string, 
+  onStatusChange?: (status: JobStatus) => void,
+  maxAttempts = 60,
+  intervalMs = 2000
+): Promise<JobStatusResponse> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const result = await getJobStatus(jobId);
+    
+    if (onStatusChange) {
+      onStatusChange(result.job);
+    }
+    
+    if (result.job.status === 'completed' || result.job.status === 'failed') {
+      return result;
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
+  
+  throw new Error('Job timed out');
 }

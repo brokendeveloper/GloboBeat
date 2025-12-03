@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 
 -- Create index on status for faster queries
-CREATE INDEX idx_jobs_status ON jobs(status);
+CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
 
 -- Create index on upload_id for joins
-CREATE INDEX idx_jobs_upload_id ON jobs(upload_id);
+CREATE INDEX IF NOT EXISTS idx_jobs_upload_id ON jobs(upload_id);

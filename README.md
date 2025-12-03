@@ -18,40 +18,33 @@ Automatizar a identificação de músicas em reportagens da Globo, facilitando:
 
 ## 🏗️ Arquitetura
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                     Frontend (Next.js 15)                    │
-│            React 19 + TypeScript + Chakra UI                 │
-│                    Port 3001                                 │
+│         React 19 + TypeScript + Tailwind + shadcn/ui         │
+│                       Port 3001                              │
 └──────────────────────┬──────────────────────────────────────┘
                        │ HTTP/REST
                        ↓
 ┌─────────────────────────────────────────────────────────────┐
 │             Backend API (Express + TypeScript)               │
 │          Node.js 20 + PostgreSQL + AWS S3                    │
-│                    Port 3000                                 │
+│                       Port 3002                              │
 └───────┬────────────────────────┬────────────────────────────┘
         │                        │
         ↓                        ↓
-┌──────────────┐        ┌──────────────┐
-│  PostgreSQL  │        │    AWS S3    │
-│   Metadata   │        │  File Store  │
-│   Port 5432  │        │              │
-└──────────────┘        └──────────────┘
-        │
-        ↓
-┌─────────────────────────────────────────────────────────────┐
-│                      RabbitMQ (Future)                       │
-│                 Message Queue for Workers                    │
-│              Ports 5672 (AMQP) + 15672 (UI)                  │
-└───────┬─────────────────────────┬───────────────────────────┘
-        │                         │
-        ↓                         ↓
-┌──────────────┐        ┌──────────────┐
-│  Worker-Pre  │        │  Worker-Rec  │
-│   (Python)   │        │   (Python)   │
-│    Planned   │        │    Planned   │
-└──────────────┘        └──────────────┘
+┌──────────────┐        ┌──────────────┐        ┌──────────────┐
+│  PostgreSQL  │        │    AWS S3    │        │   RabbitMQ   │
+│   Metadata   │        │  File Store  │        │  Job Queue   │
+│  Port 5435   │        │              │        │  Port 5672   │
+└──────────────┘        └──────────────┘        └──────┬───────┘
+                                                       │
+                                                       ↓
+                                            ┌──────────────────┐
+                                            │   Worker Audio   │
+                                            │     (Python)     │
+                                            │ ACRCloud/AcoustID│
+                                            └──────────────────┘
 ```
 
 ## ✨ Funcionalidades
@@ -66,13 +59,16 @@ Automatizar a identificação de músicas em reportagens da Globo, facilitando:
   - Progress bar em tempo real
   - Validação de tipo e tamanho
 
-- **API REST (TypeScript)**
-  - `POST /api/upload` - Upload de arquivos
-  - `GET /api/upload/:id` - Consultar upload
-  - `GET /api/uploads` - Listar uploads (paginado)
-  - `GET /api/health` - Health check
-  - Tratamento de erros centralizado
-  - Logging de requisições
+- **Reconhecimento de Trilhas**
+  - Worker Python com ACRCloud, AcoustID e Audfprint
+  - Processamento assíncrono via RabbitMQ
+  - Múltiplas trilhas por arquivo
+  - Score de confiança
+
+- **Validação de Trilhas**
+  - Interface de validação individual e em lote
+  - Status: Livre / Restrita / Desconhecida
+  - Página de detalhes por trilha
 
 - **Armazenamento**
   - AWS S3 para arquivos
@@ -82,36 +78,21 @@ Automatizar a identificação de músicas em reportagens da Globo, facilitando:
 
 - **Infraestrutura**
   - Docker Compose para orquestração
+  - RabbitMQ para fila de jobs
   - Multi-stage builds otimizados
   - Variáveis de ambiente seguras
   - Graceful shutdown
 
 ### 🚧 Em Desenvolvimento
 
-- [ ] **Worker-Pre**: Pré-processamento de áudio
-  - Extração de features
-  - Normalização
-  - Segmentação
-
-- [ ] **Worker-Rec**: Reconhecimento de trilhas
-  - Fingerprinting de áudio
-  - Identificação via AI/ML
-  - Matching com base de dados
-
 - [ ] **Autenticação**
   - JWT tokens
   - Login de usuários
   - Controle de acesso
 
-- [ ] **Interface de Resultados**
-  - Visualização de trilhas identificadas
-  - Timeline de uso musical
-  - Relatórios detalhados
-
-- [ ] **Validação**
-  - Workflow de aprovação
-  - Correções manuais
-  - Auditoria
+- [ ] **Relatórios**
+  - Exportação de resultados
+  - Dashboard de métricas
 
 ## 🚀 Quick Start
 
@@ -183,6 +164,185 @@ npm run dev
 3. Escolha um arquivo MP3 ou MP4
 4. Clique em "Fazer Upload"
 5. Veja o progresso e mensagem de sucesso!
+
+## 📡 API Endpoints
+
+A API REST está disponível em `http://localhost:3002/api` (porta pode variar).
+
+### 📚 Documentação Swagger (OpenAPI)
+
+A documentação interativa da API está disponível via **Swagger UI**:
+
+| URL | Descrição |
+|-----|-----------|
+| `http://localhost:3002/api/docs` | Interface Swagger UI interativa |
+| `http://localhost:3002/api/docs.json` | Especificação OpenAPI em JSON |
+
+Na interface Swagger você pode:
+- Visualizar todos os endpoints disponíveis
+- Ver exemplos de request/response
+- Testar os endpoints diretamente no navegador
+- Baixar a especificação OpenAPI
+
+### Health Check
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/health` | Verifica status da API |
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "service": "GloboBeat API",
+  "timestamp": "2025-12-02T21:00:00.000Z",
+  "uptime": 3600
+}
+```
+
+### Upload de Arquivos
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/api/upload` | Upload de arquivo (multipart/form-data) |
+| `GET` | `/api/upload/:id` | Obter upload por ID |
+| `GET` | `/api/uploads` | Listar todos uploads (paginado) |
+
+**POST /api/upload**
+
+```bash
+curl -X POST http://localhost:3002/api/upload \
+  -F "file=@music.mp3"
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "message": "File uploaded successfully",
+  "upload": {
+    "id": 1,
+    "filename": "abc123_music.mp3",
+    "s3Key": "uploads/abc123_music.mp3",
+    "size": 5242880,
+    "status": "uploaded",
+    "uploadedAt": "2025-12-02T21:00:00.000Z"
+  },
+  "job": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "pending"
+  }
+}
+```
+
+**GET /api/uploads?limit=10&offset=0**
+
+```json
+{
+  "success": true,
+  "uploads": [
+    {
+      "id": 1,
+      "filename": "abc123_music.mp3",
+      "original_filename": "music.mp3",
+      "s3_key": "uploads/abc123_music.mp3",
+      "file_size": 5242880,
+      "mime_type": "audio/mpeg",
+      "status": "completed",
+      "created_at": "2025-12-02T21:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Detecções de Música
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/uploads/:uploadId/detections` | Obter detecções de um upload |
+| `GET` | `/api/detections/:id` | Obter detecção por ID |
+| `GET` | `/api/detections/pending` | Listar detecções pendentes de validação |
+| `PATCH` | `/api/detections/:id/validate` | Validar uma detecção |
+| `POST` | `/api/detections/batch-validate` | Validar múltiplas detecções |
+
+**GET /api/uploads/:uploadId/detections**
+
+```json
+{
+  "success": true,
+  "detections": [
+    {
+      "id": 1,
+      "job_id": "550e8400-e29b-41d4-a716-446655440000",
+      "upload_id": 1,
+      "recognized": true,
+      "confidence": "high",
+      "title": "Billie Jean",
+      "artist": "Michael Jackson",
+      "album": "Thriller",
+      "fonte": "ACRCloud",
+      "score": 95,
+      "timestamp_start": "00:00:15",
+      "timestamp_end": "00:03:45",
+      "policy": "restrita",
+      "gmusic_id": "MJ001",
+      "validated": null,
+      "created_at": "2025-12-02T21:00:00.000Z"
+    }
+  ],
+  "stats": {
+    "total": 3,
+    "livre": 1,
+    "restrita": 1,
+    "unknown": 1
+  }
+}
+```
+
+**PATCH /api/detections/:id/validate**
+
+```bash
+curl -X PATCH http://localhost:3002/api/detections/1/validate \
+  -H "Content-Type: application/json" \
+  -d '{"validated": true}'
+```
+
+**POST /api/detections/batch-validate**
+
+```bash
+curl -X POST http://localhost:3002/api/detections/batch-validate \
+  -H "Content-Type: application/json" \
+  -d '{"ids": [1, 2, 3], "validated": true}'
+```
+
+### Jobs (Processamento)
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/jobs/:id` | Obter status do job |
+| `GET` | `/api/uploads/:uploadId/job` | Obter job de um upload |
+
+**GET /api/jobs/:id**
+
+```json
+{
+  "success": true,
+  "job": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "upload_id": 1,
+    "status": "completed",
+    "created_at": "2025-12-02T21:00:00.000Z",
+    "updated_at": "2025-12-02T21:01:00.000Z"
+  },
+  "detectionsCount": 3
+}
+```
+
+**Status do Job:**
+- `pending` - Aguardando processamento
+- `processing` - Em processamento pelo worker
+- `completed` - Processamento concluído
+- `failed` - Falha no processamento
 
 ## 🧪 Testes
 
@@ -464,14 +624,15 @@ npm run dev
 | Componente | Status | Progresso |
 |------------|--------|-----------|
 | Frontend Upload | ✅ Completo | 100% |
+| Frontend Trilhas | ✅ Completo | 100% |
+| Frontend Validação | ✅ Completo | 100% |
 | Backend API | ✅ Completo | 100% |
 | S3 Integration | ✅ Completo | 100% |
-| Database | ✅ Completo | 100% |
+| PostgreSQL | ✅ Completo | 100% |
+| RabbitMQ | ✅ Completo | 100% |
+| Worker Audio | ✅ Completo | 100% |
 | Docker Setup | ✅ Completo | 100% |
-| Worker-Pre | 🚧 Planejado | 0% |
-| Worker-Rec | 🚧 Planejado | 0% |
 | Auth System | 🚧 Planejado | 0% |
-| Results UI | 🚧 Planejado | 0% |
 
 ## 👥 Equipe
 
@@ -497,4 +658,4 @@ npm run dev
 
 **Status**: 🟢 Active Development
 
-**Última Atualização**: Outubro 2025
+**Última Atualização**: Dezembro 2025
