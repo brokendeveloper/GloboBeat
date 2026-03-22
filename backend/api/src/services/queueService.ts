@@ -1,8 +1,9 @@
-import amqp, { Channel, Connection } from 'amqplib';
+import amqp from 'amqplib';
+import fs from 'fs';
 
 class QueueService {
-  private connection: Connection | null = null;
-  private channel: Channel | null = null;
+  private connection: amqp.ChannelModel | null = null;
+  private channel: amqp.Channel | null = null;
   private readonly queueName = 'preprocessing';
 
   /**
@@ -10,9 +11,13 @@ class QueueService {
    */
   async connect(): Promise<void> {
     try {
-      const host = process.env.RABBITMQ_HOST || 'localhost';
+      // Detect if running inside Docker
+      const isInsideDocker = fs.existsSync('/.dockerenv');
+      const configuredHost = process.env.RABBITMQ_HOST || 'localhost';
+      const host = isInsideDocker ? configuredHost : 'localhost';
+      
       const user = process.env.RABBITMQ_USER || 'guest';
-      const pass = process.env.RABBITMQ_PASS || 'guest';
+      const pass = process.env.RABBITMQ_PASSWORD || process.env.RABBITMQ_PASS || 'guest';
       
       const url = `amqp://${user}:${pass}@${host}`;
       this.connection = await amqp.connect(url);

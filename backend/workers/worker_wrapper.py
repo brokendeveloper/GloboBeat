@@ -19,8 +19,8 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '../../infra/.env'))
 # --- CONFIGURAÇÕES ---
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
 RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
-RABBITMQ_PASS = os.getenv('RABBITMQ_PASS', 'guest')
-S3_BUCKET = os.getenv('S3_BUCKET', 'bucket-placeholder')
+RABBITMQ_PASS = os.getenv('RABBITMQ_PASSWORD', os.getenv('RABBITMQ_PASS', 'guest'))
+S3_BUCKET = os.getenv('S3_BUCKET_NAME', os.getenv('S3_BUCKET', 'bucket-placeholder'))
 AWS_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
@@ -52,42 +52,58 @@ def get_db_connection():
 
 
 def salvar_no_banco(job_id, resultado):
-    """Salva o resultado JSON no banco de dados"""
+    """Salva o resultado JSON no banco de dados - TODAS as músicas encontradas"""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # --- CORREÇÃO FK VIOLATION ---
-        # Garante que o Job existe antes de salvar o resultado.
-        # Se o job_id não existir na tabela 'jobs', cria um placeholder.
+        # Garante que o Job existe e pega o upload_id
         cursor.execute("""
             INSERT INTO jobs (id, status) VALUES (%s, 'processing')
             ON CONFLICT (id) DO NOTHING
         """, (job_id,))
-        # -----------------------------
+        
+        # Busca o upload_id associado ao job
+        cursor.execute("SELECT upload_id FROM jobs WHERE id = %s", (job_id,))
+        row = cursor.fetchone()
+        upload_id = row[0] if row else None
 
         reconhecido = resultado.get('reconhecido', False)
-        musica = {}
-        # Pega a primeira música da trilha se houver, para preencher os campos principais
-        if resultado.get('trilha_sonora') and len(resultado['trilha_sonora']) > 0:
-            musica = resultado['trilha_sonora'][0]
-        elif resultado.get('musica'):
-            musica = resultado.get('musica')
-
-        cursor.execute("""
-            INSERT INTO music_detections 
-            (job_id, recognized, confidence, title, artist, album, fonte, score, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
-        """, (
-            job_id,
-            reconhecido,
-            resultado.get('confianca', 'N/A'),
-            musica.get('titulo'),
-            musica.get('artista'),
-            musica.get('album'),
-            musica.get('fonte', 'Desconhecida'),
-            musica.get('score', 0)
-        ))
+        trilhas = resultado.get('trilha_sonora', [])
+        
+        # Se não há trilhas mas tem 'musica' (formato antigo)
+        if not trilhas and resultado.get('musica'):
+            trilhas = [resultado.get('musica')]
+        
+        # Salva TODAS as músicas encontradas
+        saved_count = 0
+        for musica in trilhas:
+            cursor.execute("""
+                INSERT INTO music_detections 
+                (job_id, upload_id, recognized, confidence, title, artist, album, fonte, score, 
+                 timestamp_start, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (
+                job_id,
+                upload_id,
+                True,  # Se está na lista, foi reconhecido
+                str(musica.get('score', 'N/A')),
+                musica.get('titulo'),
+                musica.get('artista'),
+                musica.get('album'),
+                musica.get('fonte', 'Desconhecida'),
+                musica.get('score', 0),
+                musica.get('tempo_encontrado', '0s')
+            ))
+            saved_count += 1
+        
+        # Se não encontrou nenhuma, registra como não reconhecido
+        if saved_count == 0:
+            cursor.execute("""
+                INSERT INTO music_detections 
+                (job_id, upload_id, recognized, confidence, created_at)
+                VALUES (%s, %s, %s, %s, NOW())
+            """, (job_id, upload_id, False, 'N/A'))
 
         # Atualiza status do job
         cursor.execute("UPDATE jobs SET status = 'completed', updated_at = NOW() WHERE id = %s", (job_id,))
@@ -95,7 +111,7 @@ def salvar_no_banco(job_id, resultado):
         conn.commit()
         cursor.close()
         conn.close()
-        print(f"✅ [JOB {job_id}] Resultados salvos no banco.")
+        print(f"✅ [JOB {job_id}] {saved_count} trilha(s) salva(s) no banco.")
     except Exception as e:
         print(f"❌ Erro ao salvar no banco: {e}")
 

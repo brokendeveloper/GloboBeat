@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS uploads (
 );
 
 -- Create index on status for faster queries
-CREATE INDEX idx_uploads_status ON uploads(status);
+CREATE INDEX IF NOT EXISTS idx_uploads_status ON uploads(status);
 
 -- Create index on created_at for sorting
-CREATE INDEX idx_uploads_created_at ON uploads(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_uploads_created_at ON uploads(created_at DESC);
 
 -- Create index on user_id for user-specific queries
-CREATE INDEX idx_uploads_user_id ON uploads(user_id);
+CREATE INDEX IF NOT EXISTS idx_uploads_user_id ON uploads(user_id);
